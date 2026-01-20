@@ -1206,6 +1206,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		},
 		beforeMoveCallback(pokemon) {
 			if (!pokemon.volatiles['wuji']?.damaged) {
+				pokemon.lastMove = this.dex.moves.get('wuji');
 				this.add('cant', pokemon, 'Wuji', 'Wuji');
 				return true;
 			}
