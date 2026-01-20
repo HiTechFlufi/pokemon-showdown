@@ -6,11 +6,22 @@ export const Items: import('../../../sim/dex-items').ModdedItemDataTable = {
 		shortDesc: "Mold Breaker; +Fire/+Water to types.",
 		desc: "This Pokemon's moves and their effects ignore the abilities of other Pokemon. Upon switching in or receiving this item, Fire and Water are added to the holder's existing types.",
 		onStart(pokemon) {
-			if (pokemon.addType('Fire')) {
-				this.add('-start', pokemon, 'typeadd', 'Fire', '[from] item: Bleeding Heart');
+			let newType = [];
+			let typeString = '';
+			for (const t of pokemon.types) newType.push(t);
+			if (!newType.includes('Fire')) newType.push('Fire');
+			if (!newType.includes('Water')) newType.push('Water');
+			
+			for (const t of newType) {
+				let str = `${t}/`;
+				typeString = typeString + str;
 			}
-			if (pokemon.addType('Water')) {
-				this.add('-start', pokemon, 'typeadd', 'Water', '[from] item: Bleeding Heart');
+			// For loop will output "Dark/Fire/Water/"
+			// *.slice(0, -1) removes the last character from the string "/"
+			typeString = typeString.slice(0, -1);
+
+			if (pokemon.setType(newType)) {
+				this.add('-start', pokemon, 'typechange', typeString, '[from] item: Bleeding Heart');
 			}
 		},
 		onModifyMove(move) {
