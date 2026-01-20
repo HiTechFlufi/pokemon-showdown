@@ -6,6 +6,11 @@ export const Pokedex: { [k: string]: ModdedSpeciesData } = {
 		baseStats: {hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100}, // the base stats for the pokemon
 	},
 	*/
+	taurospaldeacombat: {
+		inherit: true,
+		types: ['Dark'],
+		abilities: { 0: "Tenth-Shadow Shikigami" },
+	},
 	hypno: {
 		inherit: true,
 		types: ['Fairy'],

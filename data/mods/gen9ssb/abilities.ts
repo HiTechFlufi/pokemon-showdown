@@ -15,6 +15,37 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	},
 	*/
 	// Please keep abilities organized alphabetically based on staff member name!
+	// Piercing Ox
+	tenthshadowshikigami: {
+		name: "Tenth-Shadow Shikigami",
+		gen: 9,
+		shortDesc: "Raging Bull: Dark; 1.3x recoil power; 1.3x DMG taken.",
+		desc: "If this Pokemon has Raging Bull, its type becomes Dark. This Pokemon's attacks with recoil or crash damage have 1.3x power. [e.g Reckless] This Pokemon takes 1.3x damage from attacking moves. If a Pokemon other than Piercing Ox has Tenth-Shadow Shikigami, it loses 1/6 max HP at the end of each turn.",
+		onResidual(pokemon) {
+			if (pokemon.baseSpecies.baseSpecies !== 'Tauros-Paldea-Combat' || pokemon.name !== 'Piercing Ox') {
+				this.damage(pokemon.maxhp / 6, pokemon, pokemon, this.dex.abilities.get('Tenth-Shadow Shikigami'));
+			}
+		},
+		onModifyTypePriority: -1,
+		onModifyType(move) {
+			if (move.name === 'Raging Bull') {
+				move.type = 'Dark';
+			}
+		},
+		onBasePowerPriority: 22,
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.recoil || move.hasCrashDamage) {
+				this.debug('recoil damage boost (tenth-shadow shikigami)');
+				return this.chainModify([5324, 4096]);
+			}
+		},
+		onDamage(damage, target, source, effect) {
+			if (effect.effectType === 'Move' && target !== source) {
+				this.debug('increasing damage taken by 1.3x (tenth-shadow shikigami)');
+				return this.chainModify([5324, 4096]);
+			}
+		},
+	},
 	// Mel
 	icysoul: {
 		name: "Icy Soul",

@@ -41,6 +41,32 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	*/
 	// Please keep sets organized alphabetically based on staff member name!
+	// Piercing Ox
+	blackbullet: {
+		accuracy: 90,
+		basePower: 0,
+		category: "Physical",
+		name: "Black Bullet",
+		pp: 5,
+		priority: 0,
+		flags: { contact: 1, protect: 1, mirror: 1, failinstruct: 1 },
+		onTryMove(target, source, move) {
+			this.attrLastMove('[still]');
+		},
+		basePowerCallback(pokemon, target) {
+			let ratio = Math.floor(pokemon.getStat('spe') / target.getStat('spe'));
+			if (!isFinite(ratio)) ratio = 0;
+			const bp = [40, 60, 80, 120, 150][Math.min(ratio, 4)];
+			this.debug(`Black Bullet BP: ${bp}`);
+			return bp;
+		},
+		self: {
+			volatileStatus: 'lockedmove',
+		},
+		secondary: null,
+		target: "normal",
+		type: "Dark",
+	},
 	// The Stuff
 	pinkrocks: {
 		accuracy: true,
@@ -85,8 +111,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		secondary: null,
 		target: "foeSide",
 		type: "Fairy",
-		zMove: { boost: { spa: 1 } },
-		contestType: "Clever",
 	},
 	// Mel
 	deepclaw: {

@@ -259,6 +259,9 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 				// don't lock, and bypass confusion for calming
 				delete target.volatiles['lockedmove'];
 			}
+			if (['blackbullet', 'Black Bullet'].includes(this.effectState.move)) {
+				this.boost({ spe: 1 }, target, target, this.dex.getActiveMove('Black Bullet'));
+			}
 			this.effectState.trueDuration--;
 		},
 		onStart(target, source, effect) {
@@ -277,7 +280,11 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 		},
 		onEnd(target) {
 			if (this.effectState.trueDuration > 1) return;
-			target.addVolatile('confusion');
+			if (['blackbullet', 'Black Bullet'].includes(this.effectState.move)) {
+				target.switchFlag = true;
+			} else {
+				target.addVolatile('confusion');
+			}
 		},
 		onLockMove(pokemon) {
 			if (pokemon.volatiles['dynamax']) return;
