@@ -3,11 +3,13 @@ export const Items: import('../../../sim/dex-items').ModdedItemDataTable = {
 	bleedingheart: {
 		name: "Bleeding Heart",
 		gen: 9,
-		shortDesc: "Mold Breaker; +Fire/Water to types.",
+		shortDesc: "Mold Breaker; +Fire/+Water to types.",
 		desc: "This Pokemon's moves and their effects ignore the abilities of other Pokemon. Upon switching in or receiving this item, Fire and Water are added to the holder's existing types.",
 		onStart(pokemon) {
-			if (pokemon.addType('Fire') && pokemon.addType('Water')) {
+			if (pokemon.addType('Fire')) {
 				this.add('-start', pokemon, 'typeadd', 'Fire', '[from] item: Bleeding Heart');
+			}
+			if (pokemon.addType('Water')) {
 				this.add('-start', pokemon, 'typeadd', 'Water', '[from] item: Bleeding Heart');
 			}
 		},
