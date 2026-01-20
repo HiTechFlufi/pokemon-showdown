@@ -168,12 +168,6 @@ export const ssbSets: SSBSets = {
 		signatureMove: 'Complete Darkness',
 		evs: { spa: 252, spd: 4, spe: 252 }, ivs: { atk: 0 }, nature: 'Timid',
 	},
-	/* Neptune: {
-		species: 'Pidgeot-Mega', ability: '???', item: 'Storm Talisman', gender: 'M',
-		moves: ['Hurricane'],
-		signatureMove: 'Golden Order',
-		evs: {}, nature: 'Bashuful',
-	}, */
 	Pablo: {
 		species: 'Smeargle', ability: 'Artist Block', item: 'Sketchbook', gender: 'M',
 		moves: ['Sketch', 'Copycat', 'Me First'],
@@ -252,12 +246,6 @@ export const ssbSets: SSBSets = {
 		signatureMove: 'Wuji',
 		evs: { hp: 120, atk: 136, spe: 252 }, ivs: { spa: 0 }, nature: 'Jolly',
 	},
-	'The Stuff': {
-		species: 'Hypno', ability: 'Ultranumb', item: 'Pocketful of Posies', gender: 'F',
-		moves: ['Spirit Break', 'Obstruct', 'Lovely Kiss'],
-		signatureMove: 'Pink Rocks',
-		evs: { hp: 248, atk: 8, def: 252 }, nature: 'Impish', shiny: true,
-	},
 	Toshiro: {
 		species: 'Sandslash-Alola', ability: 'Daiguren Hyorinmaru', item: 'Never-Melt Ice', gender: 'M',
 		moves: ['Icicle Spear', 'Glaive Rush', 'Aqua Cutter'],
@@ -288,6 +276,21 @@ export const ssbSets: SSBSets = {
 		signatureMove: 'Super-Knuckle Shuffle',
 		evs: { def: 128, spd: 128, spe: 252 }, ivs: { atk: 0, spa: 0 }, nature: 'Jolly',
 	},
+
+	/**
+	 * Inactive Entries
+	 */
+	
+	/* START INACTIVE ENTRIES ====================
+
+	'The Stuff': {
+		species: 'Hypno', ability: 'Ultranumb', item: 'Pocketful of Posies', gender: 'F',
+		moves: ['Spirit Break', 'Obstruct', 'Lovely Kiss'],
+		signatureMove: 'Pink Rocks',
+		evs: { hp: 248, atk: 8, def: 252 }, nature: 'Impish', shiny: true,
+	},
+
+	==================== END INACTIVE ENTRIES */
 };
 
 const afdSSBSets: SSBSets = {
