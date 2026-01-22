@@ -143,10 +143,6 @@ export const Pokedex: { [k: string]: ModdedSpeciesData } = {
 		types: ['Ghost', 'Dark'],
 		abilities: { 0: "Vengeful Spirit" },
 	},
-	yveltal: {
-		inherit: true,
-		abilities: { 0: "Now, Until You Die" },
-	},
 	vikavolttotem: {
 		inherit: true,
 		types: ['Electric'],
@@ -161,5 +157,17 @@ export const Pokedex: { [k: string]: ModdedSpeciesData } = {
 		inherit: true,
 		baseStats: { hp: 88, atk: 112, def: 80, spa: 95, spd: 95, spe: 93 },
 		abilities: { 0: "Concentration" },
+	},
+	hatterene: {
+		inherit: true,
+		types: ['Normal'],
+		baseStats: { hp: 57, atk: 95, def: 29, spa: 136, spd: 90, spe: 103 },
+		abilities: { 0: "Ordinary Magician" },
+	},
+	deerling: {
+		inherit: true,
+		types: ['Ice'],
+		baseStats: { hp: 80, atk: 60, def: 70, spa: 131, spd: 70, spe: 99 },
+		abilities: { 0: "LOVE" },
 	},
 };
