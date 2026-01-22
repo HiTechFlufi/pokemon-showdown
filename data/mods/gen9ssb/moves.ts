@@ -1370,6 +1370,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				ally.hp -= dmg;
 			}
 		},
+		weather: 'snowscape',
 		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Ice",
