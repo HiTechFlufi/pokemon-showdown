@@ -339,7 +339,7 @@ export const ssbSets: SSBSets = {
 		],
 		signatureMove: 'Dominus Lapidis',
 		evs: { hp: 248, def: 92, spd: 168 },
-		nature: 'Jolly',
+		nature: 'Timid',
 	},
 
 	Mima: {
