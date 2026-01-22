@@ -1112,6 +1112,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		},
 		onPrepareHit(target, source) {
 			this.add('-anim', source, 'Shadow Claw', target);
+			this.add('-anim', source, 'Crush Claw', target);
 		},
 		type: "Ghost",
 		target: "normal",
@@ -1343,6 +1344,35 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		secondary: null,
 		target: "normal",
 		type: "Ghost",
+	},
+	// Noelle Holiday
+	snowgrave: {
+		accuracy: true,
+		basePower: 165,
+		category: "Special",
+		shortDesc: "Summons Snow and deals 20% to allies.",
+		desc: "Summons Snow. Allies lose 20% HP after use.",
+		name: "Snowgrave",
+		gen: 9,
+		pp: 40,
+		priority: 0,
+		flags: { protect: 1, mirror: 1 },
+		onTryMove() {
+			this.attrLastMove('[still]');
+		},
+		onPrepareHit(target, source) {
+			this.add('-anim', source, 'Glacial Lance', target);
+		},
+		onHit(pokemon) {
+			for (const ally of pokemon.side.pokemon) {
+				if (ally === pokemon || ally.fainted || !ally.hp) continue;
+				let dmg = ally.baseMaxhp / 5;
+				ally.hp -= dmg;
+			}
+		},
+		secondary: null,
+		target: "allAdjacentFoes",
+		type: "Ice",
 	},
 	// Pablo
 	plagiarize: {
