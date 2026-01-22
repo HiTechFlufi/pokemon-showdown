@@ -723,7 +723,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		beforeTurnCallback(pokemon) {
 			// mario puncha da block weeheeeee HELP ME.
 			this.add('-anim', pokemon, 'Sky Uppercut', pokemon);
-			const items = ['megamushroom', 'triplemushroom', 'tripleredshell', 'star', 'triplebanana', 'boo', 'powblock', 'spinyshell', 'triplegreenshell', 'blooper', 'bulletbill'];
+			const items = ['megamushroom', 'triplemushroom', 'tripleredshell', 'star', 'triplebanana', 'boo', 'powblock', 'triplegreenshell', 'blooper', 'bulletbill'];
 			const selectedItem = this.sample(items);
 			pokemon.m.itemBox = selectedItem;
 		},
@@ -808,6 +808,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 						}
 					};
 					break;
+				/*
 				case 'spinyshell':
 					this.add(`raw|<b>Spiny Shell!</b>`);
 					this.add('-anim', source, 'Wish', source);
@@ -816,6 +817,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 					this.add('-message', `The spiny shell disappeared into the sky!`);
 					return this.NOT_FAIL;
 					break;
+					*/
 				case 'triplegreenshell':
 					this.add(`raw|<b>Triple Green Shell!</b>`);
 					this.add('-anim', source, 'Teeter Dance', source);
