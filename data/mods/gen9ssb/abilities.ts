@@ -15,70 +15,402 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	},
 	*/
 	// Please keep abilities organized alphabetically based on staff member name!
-	// Piercing Ox
-	tenthshadowshikigami: {
-		name: "Tenth-Shadow Shikigami",
+	// Aeri
+	woventogethercohereforever: {
+		name: "Woven Together, Cohere Forever",
 		gen: 9,
-		shortDesc: "Raging Bull: Dark; 1.3x recoil power; 1.3x DMG taken.",
-		desc: "If this Pokemon has Raging Bull, its type becomes Dark. This Pokemon's attacks with recoil or crash damage have 1.3x power. [e.g Reckless] This Pokemon takes 1.3x damage from attacking moves. If a Pokemon other than Piercing Ox has Tenth-Shadow Shikigami, it loses 1/6 max HP at the end of each turn.",
-		onResidual(pokemon) {
-			if (pokemon.baseSpecies.baseSpecies !== 'Tauros-Paldea-Combat' || pokemon.name !== 'Piercing Ox') {
-				this.damage(pokemon.maxhp / 6, pokemon, pokemon, this.dex.abilities.get('Tenth-Shadow Shikigami'));
+		desc: "When using Blissful Breeze, this Pokémon absorbs the typing of the last move used by itself or its allies, dealing an additional instance of 80 BP damage based on the typing absorbed and applying Silken Drafts to the opposing side. The additional instance of damage lasts for three turns and only one may exist at a time. Using Blissful Breeze while this effect is active will refresh its duration. Silken Drafts increases the damage taken from moves of the absorbed typing by 40%. This effect lasts for five turns.",
+		shortDesc: "See '/ssb Aeri' for more!",
+		onBeforeMovePriority: 9,
+		onBeforeMove(pokemon) {
+			if (!pokemon.side.lastMoveUsed) return;
+			this.effectState.lastMoveType = pokemon.side.lastMoveUsed.type;
+		},
+		onAfterMoveSecondarySelf(source, target, move) {
+			if (move.id === 'blissfulbreeze') {
+				const breezeActive = target.side.sideConditions['woventogethercohereforever']
+				const draftsActive = source.side.sideConditions['silkendrafts']
+
+				// If breeze is already active, simply reset duration. If it's not active,
+				// set the this.effectState.type value and start the condition.
+				if (breezeActive) {
+					target.side.sideConditions['woventogethercohereforever'].duration = 3;
+				} else {
+					target.side.addSideCondition('woventogethercohereforever');
+					if (this.effectState.lastMoveType) {
+						target.side.sideConditions['woventogethercohereforever'].type = this.effectState.lastMoveType;
+					} else {
+						target.side.sideConditions['woventogethercohereforever'].type = 'Flying';
+					}
+				}
+
+				// Repeat for Silken Drafts, as its duration is 5 instead of 3
+				if (draftsActive) {
+					source.side.sideConditions['silkendrafts'].duration = 5;
+				} else {
+					source.side.addSideCondition('silkendrafts');
+					if (this.effectState.lastMoveType) {
+						source.side.imprintType = this.effectState.lastMoveType;
+					} else {
+						source.side.imprintType = 'Flying';
+					}
+				}	
 			}
 		},
-		onModifyTypePriority: -1,
-		onModifyType(move) {
-			if (move.name === 'Raging Bull') {
-				move.type = 'Dark';
-			}
-		},
-		onBasePowerPriority: 22,
-		onBasePower(basePower, attacker, defender, move) {
-			if (move.recoil || move.hasCrashDamage) {
-				this.debug('recoil damage boost (tenth-shadow shikigami)');
-				return this.chainModify([5324, 4096]);
-			}
-		},
-		onDamage(damage, target, source, effect) {
-			if (effect.effectType === 'Move' && target !== source) {
-				this.debug('increasing damage taken by 1.3x (tenth-shadow shikigami)');
-				return this.chainModify([5324, 4096]);
-			}
+		condition: {
+			duration: 3,
+			onResidual(pokemon) {
+				let source; let possibleSources = pokemon.side.foe.pokemon.filter(ally => ally.ability === 'woventogethercohereforever');
+				if (possibleSources.length) source = possibleSources[0];
+				if (!possibleSources.length) source = pokemon.side.foe.active[0];
+				let move = this.dex.getActiveMove('blissfulbreeze');
+				move.type = this.effectState.type;
+				this.add('-anim', pokemon, 'Geomancy', pokemon);
+				// @ts-ignore
+				const damage = this.actions.getDamage(source, pokemon, move);
+				this.damage(damage * 1.4, pokemon, source, this.dex.conditions.get('Woven Together, Cohere Forever'));
+			},
 		},
 	},
-	// Mel
-	icysoul: {
-		name: "Icy Soul",
+	// Aevum
+	temporaldomain: {
+		name: "Temporal Domain",
+		desc: "On switch-in, this Pokemon summons Temporal Terrain for 5 turns. Lasts for 8 turns if the user is holding a Terrain Extender.",
+		shortDesc: "On switch-in, this Pokemon summons Temporal Terrain.",
 		gen: 9,
-		shortDesc: "This Pokémon loses 1/6th of its maximum HP at the end of the turn unless it is burned.",
-		desc: "This Pokémon loses 1/6th of its maximum HP at the end of the turn unless it is burned.",
+		flags: {},
 		onStart(pokemon) {
-			pokemon.setType(['Ghost', 'Fighting']);
-			this.add('-start', pokemon, 'typechange', 'Ghost/Fighting', '[from] ability: Icy Soul');
+			this.field.setTerrain('temporalterrain');
 		},
-		onResidualPriority: 10,
-		onResidual(target) {
-			if (target.status !== 'brn') {
-				this.damage(target.baseMaxhp / 6, target);
-		}
 	},
-
-		onDamage(damage, target, source, effect) {
-			if (effect?.id === 'brn') {
+	// Cyclommatic Cell
+	batterylife: {
+		name: "Battery Life",
+		gen: 9,
+		shortDesc: "Stores charge to power up Electric moves/Techno Blast.",
+		desc: "This Pokemon stores up to five gauges of charge, starting at five at the start of battle. This Pokemon uses charge gauges to power up Electric moves and Techno Blast. Opposing Electric moves heal the user for 1/4 max HP and increase charge gauges; Electric immunity. Sets Electric Terrain and must recharge if the user runs out of charge gauges. Electric moves and Techno Blast fail if the user does not have enough charge gauges stored.",
+		onStart(pokemon) {
+			if (pokemon.m.gauges == null) pokemon.m.gauges = 5;
+		},
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.category === 'Status') return;
+			let g: number = attacker.m.gauges;
+			if (g == null) g = attacker.m.gauges = 0;
+			if (g <= 1) return this.chainModify(0.5);
+			if (g === 2) return this.chainModify(0.75);
+			if (g === 4) return this.chainModify(1.25);
+			if (g >= 5) return this.chainModify(1.5);
+			// g === 3 => no modifier
+		},
+		onTryHit(target, source, move) {
+			if (target !== source && move.type === 'Electric') {
+				this.heal(Math.floor(target.baseMaxhp / 4), target);
+				target.addVolatile('charge');
+				if (target.m.gauges == null) target.m.gauges = 0;
+				if (target.m.gauges < 5) target.m.gauges++;
+				this.add('-message', `${target.name} was charged up by ${move.name}!`);
+				return null; // negates the hit
+			}
+		},
+		onBeforeMove(pokemon, target, move) {
+			if (move.category === 'Status') return;
+			if (pokemon.m.gauges == null) pokemon.m.gauges = 0;
+			let cost = 0;
+			if (move.id === 'technoblast') cost = 3;
+			else if (move.type === 'Electric') cost = 2;
+			if (!cost) return;
+			if (pokemon.m.gauges < cost) {
+				this.add('-message', `${pokemon.name} doesn't have enough battery!`);
 				return false;
-		}
-	},
-
-		onModifyDamage(damage, source, target, move) {
-			if (
-				source?.status === 'brn' &&
-				move?.category === 'Physical'
-			) {
-				return this.chainModify(2);
+			}
+			pokemon.m.gauges -= cost;
+			this.add('-message', `${pokemon.name} used its battery to power up ${move.name}!`);
+		},
+		onResidual(pokemon) {
+			if (pokemon.m.gauges == null) pokemon.m.gauges = 0;
+			// If out of battery: enter recharge mode (but don't spam every turn)
+			if (pokemon.m.gauges <= 0) {
+				this.add('-anim', pokemon, 'Tickle', pokemon);
+				this.add('-message', `${pokemon.name} is out of battery!`);
+				// Only set terrain / mustrecharge if not already active
+				if (!this.field.isTerrain('electricterrain')) {
+					this.field.setTerrain('electricterrain');
+				}
+				if (!pokemon.volatiles['mustrecharge']) {
+					pokemon.addVolatile('mustrecharge');
+				}
+			} else if (pokemon.m.gauges >= 5) {
+				this.add('-anim', pokemon, 'Charge', pokemon);
+				if (!pokemon.volatiles['charge']) pokemon.addVolatile('charge');
+				this.add('-message', `${pokemon.name} is at maximum charge!`);
+			} else {
+				this.add('-anim', pokemon, 'Charge', pokemon);
+				this.add('-message', `${pokemon.name} is at ${(pokemon.m.gauges / 5) * 100}% battery!`);
+			}
+			let gained = 0;
+			if (pokemon.status === 'slp') gained++;
+			if (this.field.isTerrain('electricterrain')) gained++;
+			if (gained && pokemon.m.gauges < 5) {
+				this.add('-activate', pokemon, 'ability: Battery Life');
+				pokemon.m.gauges = Math.min(5, pokemon.m.gauges + gained);
+				this.add('-message',
+					gained === 1 ? `${pokemon.name} is charging up!` : `${pokemon.name} is charging rapidly!`
+				);
 			}
 		},
 	},
-	//Hooked Doll
+	// Emerl
+	perfectcopy: {
+		desc: "Upon switching in, this Pokemon adds a random move of the foe's to its moveset not already included. It also copies stat changes and ability.",
+		shortDesc: "Learns 1 enemy move; Copies stat changes, ability.",
+		onStart(pokemon) {
+			const target = pokemon.side.foe.active[pokemon.side.foe.active.length - 1 - pokemon.position];
+			// Replace Ability
+			if (target.ability !== 'perfectcopy') {
+				this.singleEvent('End', pokemon.getAbility(), pokemon.m, pokemon);
+				pokemon.setAbility(target.getAbility().id);
+				pokemon.m = { id: this.toID(target.ability), target: pokemon };
+			}
+			// Learning An Opponent's Move
+			let possibleMoves = [];
+			for (const moveSlot of target.moveSlots) {
+				if (pokemon.moves.includes(moveSlot.id)) continue;
+				possibleMoves.push(moveSlot.id);
+			}
+			if (possibleMoves.length) {
+				const moveid = this.sample(possibleMoves);
+				const move = this.dex.moves.get(moveid);
+				const newMove = {
+					move: move.name,
+					id: move.id,
+					pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+					maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+					target: move.target,
+					disabled: false,
+					used: false,
+				};
+				pokemon.baseMoveSlots[pokemon.moveSlots.length] = newMove;
+				pokemon.moveSlots[pokemon.moveSlots.length] = newMove;
+				this.add('-message', `${pokemon.name} copied ${target.name}'s ${target.getAbility().name} and ${this.dex.moves.get(pokemon.moveSlots[pokemon.moveSlots.length - 1].id).name}!`);
+			}
+			// Copying Stat Changes
+			const boosts: SparseBoostsTable = {};
+			let i: BoostID;
+			let boosted = false;
+			if (target.boosts) {
+				for (i in target.boosts) {
+					if (target.boosts[i] > 0) {
+						boosts[i] = target.boosts[i];
+						boosted = true;
+					}
+				}
+			}
+			if (boosted) {
+				this.add("-activate", pokemon, "ability: Perfect Copy");
+				this.boost(boosts, pokemon);
+				this.add('-message', `${pokemon.name} copied ${target.name}'s stat changes!`);
+			}
+		},
+		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1 },
+		name: "Perfect Copy",
+		gen: 9,
+	},
+	// Fblthp
+	lostandfound: {
+		name: "Lost and Found",
+		gen: 9,
+		desc: "Whenever this Pokemon is damaged by an attacking move, it takes 1/5 of the damage and immediately switches to an ally of choice. Three times per battle.",
+		shortDesc: "Takes 1/5 damage from attacks, then switches to ally of choice.",
+		onDamagePriority: 1,
+		onDamage(damage, target, source, effect) {
+			if (!target.m.switchCount) target.m.switchCount = 0;
+			if (target === source || !damage || effect.effectType !== 'Move' ||
+			target.m.switchCount >= 3 || target.side.totalFainted >= 5) return;
+
+			target.m.switchCount++;
+			this.add('-activate', target, 'ability: Lost and Found');
+			this.add('-anim', target, 'Dive', target);
+			this.add('-message', `${target.name} scrambled away from danger!`);
+			target.switchFlag = true;
+			this.add('-message', `${target.name} switch count: ${target.m.switchCount}`);
+			return damage / 5;
+		},
+	},
+	// Finger
+	absolutezen: {
+		name: "Absolute Zen",
+		desc: "This Pokemon cannot be taunted, confused, or infatuated, and at the end of every turn, restores HP equal to 1/5 of the total damage dealt to this Pokemon this turn.",
+		shortDesc: "Immune to Taunt/Confuse/Attract; Heals 1/4 damage taken.",
+		gen: 9,
+		// Damage Recovery
+		onDamagePriority: 1,
+		onDamage(damage, target, source, effect) {
+			if (!target.m.damageThisTurn) target.m.damageThisTurn = 0;
+			target.m.damageThisTurn += damage;
+		},
+		onResidual(pokemon) {
+			if (!pokemon.m.damageThisTurn) return;
+			if (pokemon.m.damageThisTurn > 0) {
+				this.heal(pokemon.m.damageThisTurn / 4, pokemon, pokemon, this.effect);
+				pokemon.m.damageThisTurn = 0;
+			}
+		},
+		onUpdate(pokemon) {
+			// Infatuation Immunity
+			if (pokemon.volatiles['attract']) {
+				this.add('-activate', pokemon, 'ability: Absolute Zen');
+				pokemon.removeVolatile('attract');
+				this.add('-end', pokemon, 'move: Attract', '[from] ability: Absolute Zen');
+			}
+			// Taunt Immunity
+			if (pokemon.volatiles['taunt']) {
+				this.add('-activate', pokemon, 'ability: Absolute Zen');
+				pokemon.removeVolatile('taunt');
+			}
+			// Confusion Immunity
+			if (pokemon.volatiles['confusion']) {
+				this.add('-activate', pokemon, 'ability: Absolute Zen');
+				pokemon.removeVolatile('confusion');
+			}
+		},
+		onTryAddVolatile(status, pokemon) {
+			if (status.id === 'confusion') return null;
+		},
+		onTryHit(pokemon, target, move) {
+			if (move.id === 'attract' || move.id === 'captivate' || move.id === 'taunt' || move?.volatileStatus === 'confusion') {
+				this.add('-immune', pokemon, '[from] ability: Absolute Zen');
+				return null;
+			}
+		},
+	},
+	// Flufi
+	forceofwill: {
+		name: "Force of Will",
+		gen: 9,
+		flags: {},
+		shortDesc: "Survives a KO attack with 1 HP. Moves have 1.33x/2x power.",
+		desc: "If this Pokemon would be knocked out by an attack, it survives at 1 HP. Once per battle. This Pokemon's moves have 1.33x power, or 2x power if this Pokemon has 1 HP remaining.",
+		onDamage(damage, target, source, effect) {
+			if (damage >= target.hp && effect && effect.effectType === 'Move' && !target.m.forceActivated) {
+				target.m.forceActivated = true;
+				this.add('-ability', target, 'Force of Will');
+				this.add('-anim', target, 'Inferno', target);
+				this.add('-message', `${target.name} isn't backing down!`);
+				return target.hp - 1;
+			}
+		},
+		onBasePowerPriority: 21,
+		onBasePower(basePower, pokemon, target, move) {
+			if (pokemon.hp === 1) {
+				return this.chainModify(2);
+			} else {
+				return this.chainModify(1.33);
+			}
+		},
+	},
+	// Gadget
+	cashgrab: {
+		name: "Cash Grab",
+		desc: "Whenever this Pokemon uses Pay Day or Stockpile, it collects 0-30 coins. This Pokemon's weight is multiplied by the number of coins stored.",
+		shortDesc: "Pay Day/Stockpile: Collects coins. Weight scales with coins.",
+		gen: 9,
+		flags: {},
+		onStart(pokemon) {
+			if (!pokemon.m.coins) pokemon.m.coins = 0;
+			this.effectState.coins = pokemon.m.coins;
+		},
+		onResidual(pokemon) {
+			if (!pokemon.m.coins) pokemon.m.coins = 0;
+			if (pokemon.m.coins === 0) {
+				this.add('-message', `${pokemon.name} boasts... no coins?!`);
+				this.add('-anim', pokemon, 'Splash', pokemon);
+				this.add('-message', 'Aw, man!');
+			} else {
+				this.add('-anim', pokemon, 'Taunt', pokemon);
+				if (pokemon.m.coins === 1) {
+					this.add('-message', `${pokemon.name} boasts one coin!`);
+				} else {
+					this.add('-message', `${pokemon.name} boasts ${pokemon.m.coins} coins!`);
+				}
+			}
+		},
+		onUpdate(pokemon) {
+			if (!pokemon.m.coins) pokemon.m.coins = 0;
+			this.effectState.coins = pokemon.m.coins;
+		},
+		onModifyWeight(weighthg) {
+			return weighthg * this.effectState.coins;
+		},
+		onAfterMoveSecondarySelf(source, target, move) {
+			if (['payday', 'stockpile'].includes(move.id)) {
+				this.add('-activate', source, 'ability: Cash Grab');
+				if (!source.m.coins) source.m.coins = 0;
+				const gain = this.random(31);
+				if (gain === 0) return;
+				this.add('-anim', source, 'Pay Day', source);
+				this.add('-anim', source, 'Tickle', source);
+				source.m.coins += gain;
+			}
+		},
+	},
+	// Gizmo
+	headonbattery: {
+		name: "Head-On Battery",
+		desc: "Allows this Pokemon to use Charge up to three times. Deals (100HP*number of charges) damage to target after reaching three charges. Forces user to switch to a random ally. Increases Attack and Speed by 50% for each charge this Pokemon has.",
+		shortDesc: "User can Charge 3x. +50% ATK/SPE for each charge.",
+		onStart(pokemon) {
+			if (pokemon.m.recallActive && !pokemon.item) {
+				pokemon.setItem('inconspicuouscoin');
+				this.add('-item', pokemon, pokemon.getItem(), '[from] item: Inconspicuous Coin');
+				pokemon.m.recallActive = false;
+			}
+		},
+		onSwitchOut(pokemon) {
+			pokemon.m.firedUp = false;
+		},
+		onModifyMove(move, pokemon) {
+			const target = pokemon.side.foe.active[pokemon.side.foe.active.length - 1 - pokemon.position];
+			if (move.id === 'charge') {
+				if (!pokemon.m.charges) pokemon.m.charges = 0;
+				if (pokemon.m.charges > 3) return;
+				pokemon.m.charges += 1;
+				if (pokemon.m.charges > 3) {
+					this.add('-activate', pokemon, '[from] ability: Head-On Battery');
+					this.add('-message', `${pokemon.name} is overflowing with charge!`);
+					this.add(`-anim`, pokemon, "Thunderclap", pokemon);
+					this.add(`-anim`, pokemon, "Volt Tackle", target);
+					this.damage(100 * pokemon.m.charges, target, pokemon);
+					pokemon.m.charges = 0;
+					this.add('-message', `${pokemon.name} was launched away by the impact!`);
+					if (pokemon.hp && !pokemon.fainted) pokemon.forceSwitchFlag = true;
+					return false;
+				}
+			}
+		},
+		onModifyAtkPriority: 5,
+		onModifyAtk(atk, pokemon) {
+			if (!pokemon.m.charges) return;
+			this.debug('Charge boost');
+			return this.chainModify(1 + (0.5 * pokemon.m.charges));
+		},
+		onModifySpe(spe, pokemon) {
+			if (!pokemon.m.charges) return;
+			this.debug('Charge boost');
+			return this.chainModify(1 + (0.5 * pokemon.m.charges));
+		},
+		onModifyCritRatio(critRatio, source, target) {
+			if (source.m.firedUp) return critRatio + 2;
+		},
+		onModifyAccuracyPriority: -1,
+		onModifyAccuracy(accuracy, target, source, move) {
+			if (typeof accuracy !== 'number') return;
+			if (target.m.firedUp) {
+				return this.chainModify([3277, 4096]);
+			}
+		},
+		gen: 9,
+	},
+	// Hooked Doll
 	vindication: {
 		name: "Vindication",
 		gen: 9,
@@ -98,38 +430,36 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 				source.addVolatile('vindictive');
 				source.m.vindictive = true;	
 				this.add('-message', `Hooked Doll seeks vengeance against ${source.name}!`)
-            }
+			}
 			this.effectState.damaged = true;
-		}, //most of that was using a main ssb mon + spite as a base. i deadass forgot cursed body was an ability until writing this lmao		
+		},
 		onSourceModifyDamage (damage, source, target, move) {
-			//once per switch in, reduces damage dealt by an attack by 75%
 			if (this.effectState.damaged === false) return this.chainModify(0.25);
 		},
 		onModifyPriority(priority, pokemon, target, move) {
-			//+2 priority on status moves
 			if (move?.category === 'Status') {
 				return priority + 2;
 			}
 		},
-        onFaint(pokemon, source, effect) {
-        if (!source || source.fainted || !effect) return;
-		if (source.volatiles['vindictive']) {
-			source.removeVolatile('vindictive');
-		}
-		if (effect.effectType === 'Move' && source.lastMove) {
-            source.addVolatile('alldisable');
-            this.add('-activate', source, 'ability: Vindication');
-			this.add('-message', `${source.name} has been crippled by Hooked Doll's final grudge.`);
-        }
-  	    },
-    }, //end of pre-mega ability
-    repentance: {
+		onFaint(pokemon, source, effect) {
+			if (!source || source.fainted || !effect) return;
+			if (source.volatiles['vindictive']) {
+				source.removeVolatile('vindictive');
+			}
+			if (effect.effectType === 'Move' && source.lastMove) {
+				source.addVolatile('alldisable');
+				this.add('-activate', source, 'ability: Vindication');
+				this.add('-message', `${source.name} has been crippled by Hooked Doll's final grudge.`);
+			}
+		},
+	},
+	// Hooked Doll
+	repentance: {
 		name: "Repentance",
 		gen: 9,
 		shortDesc: "Prankster. When hit: disable and -4 PP. Trap, +2 priority, ignore accuracy and 1.5x damage vs vindictive mons. Enemy loses vindictive when hit.",
 		desc: "Status moves have +2 priority. When hit by an attack, disables that move and drains 4 additional PP. When faced with an opponent inflicted with 'Vindictive': traps that opponent, all moves gain +2 priority, bypasses accuracy checks. When damaging an opponent with 'Vindictive', deals 1.5x extra damage and removes 'Vindictive'.",
 		onDamagingHit(damage, target, source, move) {
-			//copy-pasted from above code that disables move and drains pp
 			if (move.isZ && move.basemove) move = this.dex.moves.get(move.baseMove);
 			if (!move.flags['futuremove'] && move.id != 'struggle') {
 				source.addVolatile('disable', this.effectState.target);
@@ -137,62 +467,240 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			}
 		},
 		onFoeTrapPokemon(pokemon) {
-			//traps the opponent if they have vindictive
 			if (!pokemon.hasAbility('repentance') && pokemon.isAdjacent(this.effectState.target) && pokemon.volatiles['vindictive']) {
 				pokemon.tryTrap(true);
 			}
 		},
 		onSourceModifyAccuracy(accuracy, target, source, move) {
-			//checks if the opponent has vindictive, and if they do, hooked doll can't miss
-		    if (target?.volatiles['vindictive']) {
-			    return true;
-	 	    }
-	    },
-		onModifyPriority(priority, source, target, move) {
-			//same as above, but if they have vindictive hooked doll gets +2 priority
 			if (target?.volatiles['vindictive']) {
-			    this.debug('Repentance Boost');
-			    return priority + 2;
+				return true;
+			}
+		},
+		onModifyPriority(priority, source, target, move) {
+			if (target?.volatiles['vindictive']) {
+				this.debug('Repentance Boost');
+				return priority + 2;
 			}
 			if (move?.category === 'Status') {
 				return priority + 2;
 			}
 		},
 		onModifyDamage(damage, source, target, move) {
-			//Deals 1.5x damage against opponents with 'vindictive'
 			if (!target.volatiles['vindictive']) return;
 			this.debug('Repentance Damage');
 			return this.chainModify(1.5);
 		},
-        onAfterMove(source, target, move) {
-			//removes 'vindictive' when attacking a pokemon that has it
+		onAfterMove(source, target, move) {
 			if (move.category === 'Status') return;
 			if (target.volatiles['vindictive']) {
-			    target.removeVolatile('vindictive');
+				target.removeVolatile('vindictive');
 				target.m.vindictive = false;
 				this.add('-end', target, 'Vindictive', '[from] ability: Repentance');
 				this.add('-message', `Hooked Doll satisfied its vengeance against ${target.name}.`);
-		    }
-	    },
-	}, //end of post-mega ability
-	// Graaz
-	feralinstinct: {
-		gen: 9,
-		name: "Feral Instinct",
-		desc: "Raises this Pokemon's Speed by 1 when switching in or gaining Feral Instinct. This Pokemon cannot be flinched or confused. This Pokemon takes 3/4 damage from Fighting-type attacks.",
-		shortDesc: "+1 SPE/Cannot be flinched/confused; 3/4 damage from Fighting.",
-		onCriticalHit: false,
-		onStart(pokemon) {
-			this.boost({spe: 1}, pokemon, pokemon, this.dex.abilities.get('feralinstinct'));
-		},
-		onSourceModifyDamage(damage, source, target, move) {
-			if (move.type === 'Fighting') {
-				return this.chainModify(0.75);
 			}
 		},
-		onTryAddVolatile(status, pokemon) {
-			if (status.id === 'confusion') return null;
+	},
+	// Kaiser Dragon
+	elementalshift: {
+		desc: "This Pokemon becomes Fire/Grass/Water/Electric/Ice/Flying/Poison/Psychic/Fairy/Rock-type and sets the appropriate weather/terrain upon switching in.",
+		shortDesc: "Random type + corresponding move upon switch-in.",
+		onStart(pokemon) {
+			let r = this.random(10);
+			if (r === 0) {
+				this.add('-start', pokemon, 'typechange', 'Fire');
+				pokemon.setType('Fire');
+				this.actions.useMove('Sunny Day', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['willowisp', 'protect', 'magmastorm', 'firelash'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 1) {
+				this.add('-start', pokemon, 'typechange', 'Grass');
+				pokemon.setType('Grass');
+				this.actions.useMove('Grassy Terrain', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['leechseed', 'protect', 'hornleech', 'gigadrain'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 2) {
+				this.add('-start', pokemon, 'typechange', 'Water');
+				pokemon.setType('Water');
+				this.actions.useMove('Rain Dance', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['flipturn', 'hydrosteam', 'waterspout', 'aquatail'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 3) {
+				this.add('-start', pokemon, 'typechange', 'Electric');
+				pokemon.setType('Electric');
+				this.actions.useMove('Electric Terrain', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['thunderwave', 'voltswitch', 'charge', 'doubleshock'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 4) {
+				this.add('-start', pokemon, 'typechange', 'Ice');
+				pokemon.setType('Ice');
+				this.actions.useMove('Snowscape', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['auroraveil', 'freezyfrost', 'icespinner', 'blizzard'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 5) {
+				this.add('-start', pokemon, 'typechange', 'Flying');
+				pokemon.setType('Flying');
+				this.actions.useMove('Tailwind', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['roost', 'defog', 'aeroblast', 'beakblast'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 6) {
+				this.add('-start', pokemon, 'typechange', 'Poison');
+				pokemon.setType('Poison');
+				this.actions.useMove('Toxic Spikes', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['gunkshot', 'mortalspin', 'sludgebomb', 'clearsmog'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 7) {
+				this.add('-start', pokemon, 'typechange', 'Psychic');
+				pokemon.setType('Psychic');
+				this.actions.useMove('Psychic Terrain', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['lunardance', 'revivalblessing', 'futuresight', 'psychicfangs'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else if (r === 8) {
+				this.add('-start', pokemon, 'typechange', 'Fairy');
+				pokemon.setType('Fairy');
+				this.actions.useMove('Misty Terrain', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['moonlight', 'springtidestorm', 'sparklyswirl', 'spiritbreak'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			} else {
+				this.add('-start', pokemon, 'typechange', 'Rock');
+				pokemon.setType('Rock');
+				this.actions.useMove('Sandstorm', pokemon);
+				for (let i = 0; i < 4; i++) {
+					let moves = ['stealthrock', 'protect', 'saltcure', 'powergem'];
+					const move = this.dex.moves.get(moves[i]);
+					const newSlot = {
+						move: move.name,
+						id: move.id,
+						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
+						target: move.target,
+						disabled: false,
+						used: false,
+					};
+					pokemon.moveSlots[i] = newSlot;
+					pokemon.baseMoveSlots[i] = newSlot;
+				}
+			}
 		},
+		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, cantsuppress: 1 },
+		name: "Elemental Shift",
+		gen: 9,
 	},
 	// Karumonix
 	blackplague: {
@@ -238,6 +746,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			}
 		},
 	},
+	// Rat Servant
 	scoutshonor: {
 		name: "Scouts Honor",
 		gen: 9,
@@ -301,7 +810,558 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			pokemon.m.ratKingHP = 0;
 			this.add('-message', `${pokemon.name} returns to the Rat King!`);
 		},
-	},	
+	},
+	// Koiru
+	triplethreat: {
+		name: "Triple Threat",
+		gen: 9,
+		shortDesc: "3 modes w/ Grades D->S that tick each turn (even benched). Coil Connection swaps modes.",
+		desc: "Coil Connection swaps modes (Gravity/Speed/Regen). Grades D->S tick each turn and persist even benched. At end of S Grade turn, user is forced to switch and gives Tether to the incoming ally; grade becomes C. Grade resets to D when switching modes.",
+		onStart(pokemon) {
+			if (!pokemon.m.coilMode) pokemon.m.coilMode = 'gravity';
+			if (!pokemon.m.coilGrade) pokemon.m.coilGrade = 'D';
+			this.add('-message', `${pokemon.name} armed its coils! (${pokemon.m.coilMode.toUpperCase()} | Grade ${pokemon.m.coilGrade})`);
+		},
+		onSwitchIn(pokemon) {
+			const mode = (pokemon.m.coilMode ? String(pokemon.m.coilMode).toUpperCase() : 'GRAVITY');
+			const grade = (pokemon.m.coilGrade ? pokemon.m.coilGrade : 'D');
+			this.add('-message', pokemon.name + " enters: " + mode + " | Grade " + grade);
+		},
+		// ===== Mode buff helpers =====
+		onModifyAtk(atk, pokemon) {
+			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
+			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
+			if (mode === 'gravity' || mode === 'fusion') {
+				const mult = (g === 'D') ? 1 :
+					(g === 'C') ? 1.2 :
+					(g === 'B') ? 1.3 :
+					(g === 'A') ? 1.4 : 1.5;
+				return this.chainModify(mult);
+			}
+			return;
+		},
+		onModifySpe(spe, pokemon) {
+			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
+			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
+			if (mode === 'speed' || mode === 'fusion') {
+				const mult = (g === 'D') ? 1 :
+					(g === 'C') ? 1.2 :
+					(g === 'B') ? 1.3 :
+					(g === 'A') ? 1.4 : 1.5;
+				return this.chainModify(mult);
+			}
+			return;
+		},
+		// Weight scaling (Gravity + Fusion)
+		onModifyWeight(weighthg, pokemon) {
+			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
+			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
+			if (mode !== 'gravity' && mode !== 'fusion') return;
+			const mult = (g === 'D') ? 2 :
+				(g === 'C') ? 4 :
+				(g === 'B') ? 6 :
+				(g === 'A') ? 8 : 10;
+			return Math.floor(weighthg * mult);
+		},
+		onModifyAccuracy(accuracy, target, source, move) {
+			if (!move || move.category === 'Status') return;
+			if (target !== this.effectState.target) return;
+			const mode = target.volatiles['coilfusion'] ? 'fusion' : target.m.coilMode;
+			const g = target.volatiles['coilfusion'] ? 'B' : (target.m.coilGrade || 'D');
+			if (mode !== 'speed' && mode !== 'fusion') return;
+			if (accuracy === true) return;
+			const evMult =
+				(g === 'D') ? 1.1 :
+				(g === 'C') ? 1.2 :
+				(g === 'B') ? 1.3 :
+				(g === 'A') ? 1.4 : 1.5;
+			return this.chainModify(1 / evMult);
+		},
+		// Regen healing while ACTIVE (Fusion also counts)
+		onResidual(pokemon) {
+			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
+			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
+			if (mode === 'regen' || mode === 'fusion') {
+				// D 1/16, C 1/8, B 1/4, A 1/2, S 1/2
+				const frac =
+					(g === 'D') ? [1, 16] :
+					(g === 'C') ? [1, 8] :
+					(g === 'B') ? [1, 4] :
+					[1, 2];
+				this.heal(pokemon.maxhp * (frac[0] / frac[1]), pokemon, pokemon, this.dex.abilities.get('triplethreat'));
+				this.add('-anim', pokemon, 'Recover', pokemon);
+			}
+		},
+	},
+	// Kozuchi
+	scrapworker: {
+		desc: "1.1x Accuracy. Reduces damage from Physical Attacks by 75% and Special Attacks by 30%. Loses 25% for Physical and 10% for Special with each attack received.",
+		shortdesc: "1.1x ACC; +75% DEF/+30% SPD. -33% damage reduction when hit.",
+		onStart(pokemon) {
+			if (!pokemon.m.armor && !pokemon.m.usedArmor) {
+				this.add('-activate', pokemon, 'ability: Scrapworker');
+				pokemon.m.armor = 3;
+				pokemon.m.usedArmor = true;
+				this.add('-message', `${pokemon.name} equipped their armor from Scrapworker!`);
+			}
+		},
+		onSourceModifyDamage(damage, source, target, move) {
+			if (move.category === 'Physical') {
+				if (!target.m.armor) return;
+				if (target.m.armor === 3) return this.chainModify(0.25);
+				if (target.m.armor === 2) return this.chainModify(0.5);
+				if (target.m.armor === 1) return this.chainModify(0.75);
+			}
+			if (move.category === 'Special') {
+				if (!target.m.armor) return;
+				if (target.m.armor === 3) return this.chainModify(0.7);
+				if (target.m.armor === 2) return this.chainModify(0.8);
+				if (target.m.armor === 1) return this.chainModify(0.9);
+			}
+		},
+		onSourceModifyAccuracy(accuracy) {
+			if (typeof accuracy !== 'number') return;
+			this.debug('Scrapworker - enhancing accuracy');
+			return accuracy * 1.1;
+		},
+		onDamagingHit(damage, source, target, move) {
+			if (source.m.armor && source.m.armor > 0) {
+				source.m.armor -= 1;
+				if (source.m.armor > 0) this.add('-message', `${source.name}'s armor was chipped!`);
+				if (source.m.armor === 0) this.add('-message', `${source.name}'s armor broke!`);
+			}
+		},
+		onBasePower(basePower, pokemon, move) {
+			if (!pokemon.m.enhancement) return;
+			if (pokemon.m.enhancement === 1) return this.chainModify(1.3);
+			if (pokemon.m.enhancement === 2) return this.chainModify(1.82);
+			if (pokemon.m.enhancement === 3) return this.chainModify(2.73);
+		},
+	},
+	// Luminous
+	blindinglight: {
+		name: "Blinding Light",
+		gen: 9,
+		onStart(pokemon) {
+			this.add('-anim', pokemon, 'Flash', pokemon);
+			for (const target of this.getAllActive()) {
+				if (pokemon === target) continue;
+				target.addVolatile('blindinglight');
+			}
+		},
+		onModifyType(move, pokemon) {
+			this.debug(`LOR typechange to Light-type`);
+			if (move.id === 'lightofruin' && pokemon.species.id === 'necrozmaultra') move.type = 'Light';
+		},
+		condition: {
+			duration: 1,
+			onStart(pokemon) {
+				this.add('-message', `${pokemon.name} was struck by a blinding light!`);
+				this.boost({ accuracy: -6 }, pokemon);
+			},
+			onEnd(pokemon) {
+				this.add('-message', `The blinding light faded!`);
+				this.boost({ accuracy: 6 }, pokemon);
+			},
+		},
+	},
+	// Marisa Kirisame
+	ordinarymagician: {
+		desc: "This Pokemon is immune to status, and changes its typing to match the typing of the move it's using. On switch-in, user obtains either Assault Vest, Choice Specs, Expert Belt, Flame Orb, Light Ball, Razor Fang, or Toxic Orb. On switch-out, uses Fling.",
+		shortDesc: "Immune to status; Protean; Random item/fling on switch-in/out.",
+		onStart(pokemon) {
+			let i = this.random(6);
+			if (i === 0) {
+				pokemon.setItem('choicespecs');
+				this.add('-message', `${pokemon.name} obtained Choice Specs!`);
+			} else if (i === 1) {
+				pokemon.setItem('expertbelt');
+				this.add('-message', `${pokemon.name} obtained Expert Belt!`);
+			} else if (i === 2) {
+				pokemon.setItem('flameorb');
+				this.add('-message', `${pokemon.name} obtained Flame Orb!`);
+			} else if (i === 3) {
+				pokemon.setItem('lightball');
+				this.add('-message', `${pokemon.name} obtained Light Ball!`);
+			} else if (i === 4) {
+				pokemon.setItem('razorfang');
+				this.add('-message', `${pokemon.name} obtained Razor Fang!`);
+			} else {
+				pokemon.setItem('toxicorb');
+				this.add('-message', `${pokemon.name} obtained Toxic Orb!`);
+			}
+		},
+		onPrepareHit(source, target, move) {
+			if (move.hasBounced || move.flags['futuremove'] || move.sourceEffect === 'snatch') return;
+			const type = move.type;
+			if (type && type !== '???' && source.getTypes().join() !== type) {
+				if (!source.setType(type)) return;
+				this.add('-start', source, 'typechange', type, '[from] ability: Ordinary Magician');
+			}
+		},
+		onUpdate(pokemon) {
+			if (pokemon.status === 'brn' || pokemon.status === 'frz' || pokemon.status === 'par' || pokemon.status === 'psn' || pokemon.status === 'tox' || pokemon.status === 'slp') {
+				this.add('-activate', pokemon, 'ability: Ordinary Magician');
+				pokemon.cureStatus();
+			}
+		},
+		onSetStatus(status, target, source, effect) {
+			if (status.id !== 'brn' || status.id !== 'frz' || status.id !== 'par' || status.id !== 'psn' || status.id !== 'tox' || status.id !== 'slp') return;
+			if ((effect as Move)?.status) {
+				this.add('-immune', target, '[from] ability: Ordinary Magician');
+			}
+			return false;
+		},
+		onTryAddVolatile(status, target) {
+			if (status.id === 'yawn') {
+				this.add('-immune', target, '[from] ability: Ordinary Magician');
+				return null;
+			}
+		},
+		onSwitchOut(pokemon) {
+			this.actions.useMove('Fling', pokemon);
+		},
+		flags: { breakable: 1 },
+		name: "Ordinary Magician",
+		gen: 9,
+	},
+	// Marvin
+	murderousmimic: {
+		name: "Murderous Mimic",
+		gen: 9,
+		flags: {},
+		shortDesc: "Transforms into an ally of choice when using Mimic.",
+		onModifyMove(move, pokemon) {
+			if (move.id === 'mimic') {
+				move.onAfterMove = function (p, t, m) {
+					this.add('-activate', p, 'ability: Murderous Mimic');
+					p.side.addSlotCondition(p, 'mimic');
+					p.switchFlag = true;
+				};
+			}
+		},
+		onSwitchOut(pokemon) {
+			if (pokemon.species.name !== 'Darmanitan-Galar-Zen') changeSet(this, pokemon, ssbSets['Marvin'], true);
+		},
+	},
+	// Mel
+	icysoul: {
+		name: "Icy Soul",
+		gen: 9,
+		shortDesc: "This Pokémon loses 1/6th of its maximum HP at the end of the turn unless it is burned.",
+		desc: "This Pokémon loses 1/6th of its maximum HP at the end of the turn unless it is burned.",
+		onStart(pokemon) {
+			pokemon.setType(['Ghost', 'Fighting']);
+			this.add('-start', pokemon, 'typechange', 'Ghost/Fighting', '[from] ability: Icy Soul');
+		},
+		onResidualPriority: 10,
+		onResidual(target) {
+			if (target.status !== 'brn') {
+				this.damage(target.baseMaxhp / 6, target);
+			}
+		},
+		onDamage(damage, target, source, effect) {
+			if (effect?.id === 'brn') {
+				return false;
+			}
+		},
+		onModifyDamage(damage, source, target, move) {
+			if (source?.status === 'brn' && move?.category === 'Physical') {
+				return this.chainModify(2);
+			}
+		},
+	},
+	// Morax
+	heraldoforder: {
+		name: "Herald of Order",
+		gen: 9,
+		flags: {},
+		shortDesc: "See '/ssb Morax' for more!",
+		onModifyMove(move, pokemon) {
+			if (move.category !== 'Status' && move.target !== 'allAdjacent') move.target = 'allAdjacent';
+		},
+	},
+	// Mima
+	vengefulspirit: {
+		desc: "This Pokemon's attacks hit before the target switches. This Pokemon's attacks knock off the target's held item.",
+		shortDesc: "Hits before target switches; Attacks knock off item.",
+		onBeforeTurn(pokemon) {
+			for (const side of this.sides) {
+				if (side.hasAlly(pokemon)) continue;
+				side.addSideCondition('vengefulspirit', pokemon);
+				const data = side.getSideConditionData('vengefulspirit');
+				if (!data.sources) {
+					data.sources = [];
+				}
+				data.sources.push(pokemon);
+			}
+		},
+		onTryHit(source, target) {
+			target.side.removeSideCondition('vengefulspirit');
+		},
+		onAfterMoveSecondarySelf(source, target, move) {
+			if (!move || !target || source.switchFlag === true) return;
+			if (target !== source && move.category !== 'Status') {
+				const item = target.takeItem(source);
+				if (item) this.add('-enditem', target, item.name, '[from] ability: Vengeful Spirit', '[of] ' + source);
+			}
+		},
+		condition: {
+			duration: 1,
+			onBeforeSwitchOut(pokemon) {
+				const move = this.queue.willMove(pokemon.foes()[0]);
+				const moveName = move && move.moveid ? move.moveid.toString() : "";
+				this.debug('Pursuit start');
+				let alreadyAdded = false;
+				pokemon.removeVolatile('destinybond');
+				for (const source of this.effectState.sources) {
+					if (!source.isAdjacent(pokemon) || !this.queue.cancelMove(source) || !source.hp) continue;
+					if (!alreadyAdded) {
+						this.add('-activate', pokemon.foes()[0], 'ability: Vengeful Spirit');
+						alreadyAdded = true;
+					}
+					if (source.canMegaEvo || source.canUltraBurst) {
+						for (const [actionIndex, action] of this.queue.entries()) {
+							if (action.pokemon === source && action.choice === 'megaEvo') {
+								this.actions.runMegaEvo(source);
+								this.queue.list.splice(actionIndex, 1);
+								break;
+							}
+						}
+					}
+					this.actions.runMove(moveName, source, source.getLocOf(pokemon));
+				}
+			},
+		},
+		flags: {},
+		name: "Vengeful Spirit",
+		gen: 9,
+	},
+	// Noelle Holiday
+	love: {
+		shortDesc: "Snow on switch-in; +1/4 mHP and SpA per KO.",
+		desc: "On switch-in, this Pokemon summons Snow. For each knockout this Pokemon scores, its max HP and Special Attack are permanently boosted by 1/4 and it restores 1/4 HP.",
+		name: "LOVE",
+		onStart(pokemon, source) {
+			this.field.setWeather('snowscape');
+			if (!pokemon.m.love) pokemon.m.love = 0;
+		},
+		onModifySpA(spa, pokemon) {
+			const love = pokemon.m.love;
+			return this.chainModify(1 + 0.25 * love);
+		},
+		onSourceAfterFaint(pokemon, length, target, source, effect) {
+			if (effect && effect.effectType === 'Move') {
+				pokemon.m.love += length;
+				const love = pokemon.m.love;
+				pokemon.maxhp = pokemon.maxhp * (1 + 0.25 * love);
+				pokemon.heal(pokemon.maxhp / 4);
+				this.add('-message', `* ${pokemon.name} became stronger.`);
+			}
+		},
+		flags: {},
+		gen: 9,
+	},
+	// Pablo
+	artistblock: {
+		name: 'Artist Block',
+		gen: 9,
+		desc: "Whenever this Pokemon has a stat lowered, its Attack, Special Attack, and Speed increase by 2 stages. This Pokemon cannot be taunted. This Pokemon usually goes first when using Sketch.",
+		shortDesc: "Stat(s) lowered: +2 Atk/Spa/Spe; Cannot be taunted; Sketch: +1 Priority.",
+		onAfterEachBoost(boost, target, source, effect) {
+			if (!source || target.isAlly(source)) {
+				return;
+			}
+			let statsLowered = false;
+			let i: BoostID;
+			for (i in boost) {
+				if (boost[i]! < 0) {
+					statsLowered = true;
+				}
+			}
+			if (statsLowered) {
+				this.boost({ atk: 2 }, target, target, null, false, true);
+				this.boost({ spa: 2 }, target, target, null, false, true);
+				this.boost({ spe: 2 }, target, target, null, false, true);
+			}
+		},
+		onUpdate(pokemon) {
+			if (pokemon.volatiles['taunt']) {
+				this.add('-activate', pokemon, 'ability: Artist Block');
+				pokemon.removeVolatile('taunt');
+			}
+		},
+		onTryHit(pokemon, target, move) {
+			if (move.id === 'taunt') {
+				this.add('-immune', pokemon, '[from] ability: Artist Block');
+				return null;
+			}
+		},
+		onModifyPriority(priority, pokemon, target, move) {
+			if (move.id === 'sketch') return priority + 1;
+		},
+	},
+	// Piercing Ox
+	tenthshadowshikigami: {
+		name: "Tenth-Shadow Shikigami",
+		flags: {},
+		gen: 9,
+		shortDesc: "Raging Bull: Dark; 1.3x recoil power; 1.3x DMG taken.",
+		desc: "If this Pokemon has Raging Bull, its type becomes Dark. This Pokemon's attacks with recoil or crash damage have 1.3x power. [e.g Reckless] This Pokemon takes 1.3x damage from attacking moves. If a Pokemon other than Piercing Ox has Tenth-Shadow Shikigami, it loses 1/6 max HP at the end of each turn.",
+		onResidual(pokemon) {
+			if (pokemon.baseSpecies.baseSpecies !== 'Tauros-Paldea-Combat' || pokemon.name !== 'Piercing Ox') {
+				this.damage(pokemon.maxhp / 6, pokemon, pokemon, this.dex.abilities.get('Tenth-Shadow Shikigami'));
+			}
+		},
+		onModifyTypePriority: -1,
+		onModifyType(move) {
+			if (move.name === 'Raging Bull') {
+				move.type = 'Dark';
+			}
+		},
+		onBasePowerPriority: 22,
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.recoil || move.hasCrashDamage) {
+				this.debug('recoil damage boost (tenth-shadow shikigami)');
+				return this.chainModify([5324, 4096]);
+			}
+		},
+		onDamage(damage, target, source, effect) {
+			if (effect.effectType === 'Move' && target !== source) {
+				this.debug('increasing damage taken by 1.3x (tenth-shadow shikigami)');
+				return this.chainModify([5324, 4096]);
+			}
+		},
+	},
+	// PokeKart
+	chaindrift: {
+		name: "Chain Drift",
+		gen: 9,
+		onStart() {
+			this.effectState.damaged = false;
+		},
+		onDamagingHit(damage, target, source, move) {
+			if (!target || source === target) return;
+			this.boost({ spe: -1 }, target, source);
+			this.effectState.damaged = true;
+		},
+		onResidual(pokemon) {
+			if (this.effectState.damaged === false) {
+				this.boost({ spe: 1 }, pokemon);
+			}
+			this.effectState.damaged = false;
+		},
+	},
+	// Prince Smurf
+	quickcamo: {
+		shortDesc: "Changes type to resist move before hit + Protean. First move slot is STAB.",
+		desc: "This Pokemon changes type to match the type of the attack it is currently using, and changes type to resist incoming attacks. This Pokemon's first moveslot changes type to match the user's primary type.",
+		name: "Quick Camo",
+		onTryHit(target, source, move) {
+			if (target === source) return;
+			if (move.flags['futuremove']) return;
+			const possibleTypes = [];
+			const attackType = move.type;
+			for (const type of this.dex.types.names()) {
+				if (target.hasType(type)) continue;
+				const typeCheck = this.dex.types.get(type).damageTaken[attackType];
+				if (typeCheck === 2) {
+					possibleTypes.push(type);
+				}
+			}
+			if (!possibleTypes.length) return;
+			const randomType = this.sample(possibleTypes);
+			target.setType(randomType);
+			this.add('-start', target, 'typechange', randomType);
+		},
+		onPrepareHit(source, target, move) {
+			if (move.hasBounced || move.flags['futuremove'] || move.sourceEffect === 'snatch') return;
+			const type = move.type;
+			if (type && type !== '???' && source.getTypes().join() !== type) {
+				source.setType(type);
+				this.add('-start', source, 'typechange', type, '[from] ability: Quick Camo');
+			}
+		},
+		onModifyMove(move, pokemon, target) {
+			const types = pokemon.getTypes(true);
+			const noModifyType = [
+				'judgment', 'multiattack', 'naturalgift', 'revelationdance', 'technoblast', 'terrainpulse', 'weatherball',
+			];
+			if (noModifyType.includes(move.id)) return;
+			for (const [i, type] of types.entries()) {
+				if (!this.dex.types.isName(type)) continue;
+				if (pokemon.moveSlots[i] && move.id === pokemon.moveSlots[i].id) move.type = type;
+			}
+		},
+		flags: {},
+	},
+	// Quetzalcoatl
+	pealofthunder: {
+		desc: "This Pokemon summons Electric Terrain when hit by Electric moves; Electric immunity.",
+		onTryHit(target, source, move) {
+			if (move.type === 'Electric') {
+				this.field.setTerrain('electricterrain');
+				this.add('-immune', target, '[from] ability: Peal of Thunder');
+				return null;
+			}
+		},
+		onResidual(pokemon) {
+			this.add('-activate', pokemon, 'Peal of Thunder');
+			this.effectState.runStatic = true;
+
+			let allTargets = [];
+			for (const target of this.getAllPokemon()) {
+				if (target.fainted || !target.hp) continue;
+				allTargets.push(target);
+			}
+			const target = this.sample(allTargets);
+
+			const move = this.dex.moves.get('thundershock');
+			const activeMove = {
+				move: move.name, id: move.id, basePower: 20, pp: move.pp, maxpp: move.pp,
+				target: move.target, disabled: false, used: false,
+			};
+			const damage = this.actions.getDamage(pokemon, target, activeMove);
+			this.add('-anim', pokemon, 'Thunderbolt', target.side.active[0]);
+
+			// First run an ability check and damage check to ensure target does not have PoT and damage is present
+			if (target.ability === 'pealofthunder') {
+				this.field.setTerrain('electricterrain');
+				this.add('-immune', target);
+				return;
+			}
+			if (!damage || damage <= 0) {
+				this.add('-immune', target);
+				return;
+			}
+			// Both checks break from the function if true. If the checks are passed, proceed to damage
+			// First checking if target is active or inactive, so we can use the correct function for damage
+			// this.damage does NOT work on inactive Pokemon, HP must be manually lowered; See below.
+			if (target.isActive) {
+				this.damage(damage, target, pokemon);
+			} else {
+				target.hp -= damage;
+				if (target.hp < 0) target.hp = 0;
+				this.add('-message', `${target.name} was hurt by Peal of Thunder!`);
+			}
+		},
+		onUpdate(pokemon) {
+			if (this.effectState.runStatic) {
+				this.effectState.runStatic = false;
+				this.add('-anim', pokemon, 'Charge', pokemon);
+				if (!pokemon.m.static) pokemon.m.static = 0;
+				if (this.field.terrain === 'electricterrain') {
+					pokemon.m.static += 2;
+					this.add('-message', `${pokemon.name} received two static counters!`);
+				} else {
+					pokemon.m.static++;
+					this.add('-message', `${pokemon.name} received a static counter!`);
+				}
+			}
+		},
+		name: "Peal of Thunder",
+		gen: 9,
+	},
 	// Roughskull
 	venomshock: {
 		name: "Venom Shock",
@@ -318,6 +1378,596 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 					target.setStatus('par', source, this.dex.abilities.get('venomshock'));
 				}
 			}
+		},
+	},
+	// Saint Deli
+	generosity: {
+		name: "Generosity",
+		gen: 9,
+		flags: {},
+		desc: "Present becomes Ice-type/Special + Gives Charcoal; Life Dew heals unfainted party members 1/4 max HP; On switch out, summons Lucky Chant and cures allies of all status conditions. Upon fainting, summons Revival Blessing and grants permanent Helping Hand to all party members.",
+		shortDesc: "See '/ssb Saint Deli' for more!",
+		onModifyMove(move, pokemon) {
+			if (move.id === 'present') {
+				move.type = 'Ice';
+				move.category = 'Special';
+				move.onHit = function (t, s, m) {
+					const success = t.takeItem();
+					const newItem = this.dex.items.get('charcoal')
+					if (!success) return;
+					t.item = newItem.id;
+					t.setItem(newItem);
+					this.add('-item', t, newItem, '[from] move: Present');
+				};
+			}
+			if (move.id === 'lifedew') {
+				move.onAfterMoveSecondarySelf = function (p, t, m) {
+					for (const ally of p.side.pokemon) {
+						if (ally === p) continue;
+						if (!ally.hp || ally.hp >= ally.maxhp) continue;
+						if (ally.isActive) {
+							this.heal(ally.maxhp / 4, ally, s, this.effect);
+						} else {
+							ally.hp += ally.maxhp / 4;
+							this.add('-heal', ally, ally.getHealth);
+						}
+					}
+				};
+			}
+		},
+		onDamage(damage, target, source, effect) {
+			if (!target.m.sack) target.m.sack = [];
+			const move = this.dex.moves.get(effect.id);
+			const willTrigger = move.category === 'Special' && !target.m.sack.length
+			if (willTrigger || !move || target === source) return;
+			// if rbTriggered is true, that means Revival Blessing is queued and waiting to happen.
+			// Using this to avoid further damage from shenanigans, such as Zeeb's Slingshot
+			if (this.effectState.rbTriggered) return false;
+			if (damage >= target.hp) {
+				if (!this.effectState.rbTriggered) {
+					this.effectState.rbTriggered = true;
+					this.add('-activate', target, this.dex.abilities.get('generosity'));
+					this.actions.useMove('Revival Blessing', target);
+				}
+				return false;
+			}
+		},
+		onSwitchOut(pokemon) {
+			pokemon.side.addSideCondition('luckychant');
+			let success = false;
+			const allies = [...pokemon.side.pokemon, ...pokemon.side.allySide?.pokemon || []];
+			for (const ally of allies) {
+				if (ally.status) ally.cureStatus();
+			}
+		},
+		onFaint(pokemon) {
+			// Automatically applies Helping Hand to next ally that switches in
+			// Handled in .../sim/side.ts
+			pokemon.side.hhBoost = true;
+		},
+	},
+	// Sakuya Izayoi
+	theworld: {
+		name: "The World",
+		gen: 9,
+		onSwitchIn(pokemon) {
+			if (!this.field.pseudoWeather['trickroom']) {
+				this.field.addPseudoWeather('trickroom');
+			} else {
+				this.field.removePseudoWeather('trickroom');
+			}
+		},
+		onFoeTryMove(target, source, move) {
+			if (move.category === 'Status' || move.flags['futuremove']) return;
+			if (!source.side.addSlotCondition(source, 'futuremove')) return;
+			Object.assign(source.side.slotConditions[source.position]['futuremove'], {
+				duration: 2,
+				move: move.id,
+				source: target,
+				moveData: {
+					id: move.id,
+					name: move.name,
+					accuracy: move.accuracy,
+					basePower: move.basePower,
+					category: move.category,
+					priority: move.priority,
+					flags: { allyanim: 1, metronome: 1, futuremove: 1, bypasssub: 1 },
+					ignoreImmunity: true,
+					effectType: 'Move',
+					type: move.type,
+				},
+			});
+			this.add('-start', source, 'move: ' + move.name, '[silent]');
+			this.add('-message', `${source.name} shifted ${move.name} into the future!`);
+			return this.NOT_FAIL;
+		},
+	},
+	// Sanae Kochiya
+	windpriestess: {
+		desc: "This Pokemon summons a random weather upon switching in and gains +1 Defense, Special Attack or Special Defense per turn.",
+		shortDesc: "Switch-in: Random weather. +1 Def, Spd, or Spe per turn.",
+		onStart(pokemon) {
+			const w = this.random(4);
+			if (w === 0) {
+				this.field.setWeather('sunnyday');
+				this.add('-message', `${pokemon.name}'s Wind Priestess summoned harsh sunlight!`);
+			} else if (w === 1) {
+				this.field.setWeather('raindance');
+				this.add('-message', `${pokemon.name}'s Wind Priestess summoned heavy rain!`);
+			} else if (w === 2) {
+				this.field.setWeather('snow');
+				this.add('-message', `${pokemon.name}'s Wind Priestess summoned a snowstorm!`);
+			} else {
+				this.field.setWeather('sandstorm');
+				this.add('-message', `${pokemon.name}'s Wind Priestess summoned a sandstorm!`);
+			}
+		},
+		onResidual(pokemon) {
+			if (pokemon.activeTurns) {
+				const s = this.random(3);
+				if (s === 0) {
+					this.boost({ spd: 1 });
+				} else if (s === 1) {
+					this.boost({ def: 1 });
+				} else {
+					this.boost({ spa: 1 });
+				}
+			}
+		},
+		flags: {},
+		name: "Wind Priestess",
+		gen: 9,
+	},
+	// Sariel
+	nowuntilyoudie: {
+		name: "Now, Until You Die",
+		gen: 9,
+		desc: "Upon attacking, the target's max HP is set to its current HP.",
+		shortDesc: "Attacks set max HP to current.",
+		onSourceDamagingHit(damage, target, source, move) {
+			target.maxhp = target.hp;
+		},
+	},
+	// Shifu Robot
+	autorepair: {
+		name: "Auto Repair",
+		gen: 9,
+		// Handled in ../config/formats.ts
+	},
+	// Shigeki
+	hemolust: {
+		name: "Hemolust",
+		gen: 9,
+		shortDesc: "Dark/Bug. Illusion. 0.75x dmg taken while disguised. Contact: 30% Bleeding. Glare vs already-par -> Brainwashed. Restock Blood Packs on switch if empty.",
+		desc: "This Pokemon becomes Dark/Bug. It disguises itself as the last unfainted Pokemon in its party until hit by a damaging move. While disguised, it takes 25% less damage. Its contact moves have a 30% chance to inflict Bleeding (Ghost immune). If it uses Glare on an already-paralyzed target, it inflicts Brainwashed (Psychic immune). Bite moves drain 50% (25% in Frenzy). If it has no item, it gains Blood Packs when switching out.",
+		onStart(pokemon) {
+			pokemon.setType(['Dark', 'Bug']);
+			if (!(pokemon as any).illusion) {
+				this.add('-start', pokemon, 'typechange', 'Dark/Bug', '[silent]');
+			} else {
+				(pokemon.m as any).hemolustRevealTypeLater = true;
+			}
+			this.effectState.glareWasAlreadyPar = false;
+		},
+		// Set disguise when coming in
+		onBeforeSwitchIn(pokemon) {
+			let illusion: Pokemon | null = null;
+			for (let i = pokemon.side.pokemon.length - 1; i >= 0; i--) {
+				const p = pokemon.side.pokemon[i];
+				if (!p.fainted && p !== pokemon) { illusion = p; break; }
+			}
+			if (illusion) {
+				(pokemon as any).illusion = illusion;
+			}
+		},
+		// 25% less damage taken while illusion is active
+		onSourceModifyDamage(damage, source, target, move) {
+			if ((target as any).illusion) return this.chainModify([3072, 4096]); // 0.75
+		},
+		onModifyDamage(damage, source, target, move) {
+			if ((target as any).illusion) return this.chainModify([3072, 4096]); // safety hook
+		},
+		// BREAK disguise when hit by a damaging move
+		onDamagingHit(damage, target, source, move) {
+			if (!(target as any).illusion) return;
+			(target as any).illusion = null;
+			const details = (target as any).getUpdatedDetails();
+			this.add('replace', target, details);
+			this.add('-end', target, 'Illusion');
+			if ((target.m as any).hemolustRevealTypeLater) {
+				this.add('-start', target, 'typechange', 'Dark/Bug', '[silent]');
+				(target.m as any).hemolustRevealTypeLater = false;
+			}
+		},
+		// Record whether the Glare target was already paralyzed BEFORE the move lands
+		onTryHit(target, source, move) {
+			if (move?.id === 'glare') {
+				this.effectState.glareWasAlreadyPar = (target.status === 'par');
+			}
+		},
+		onModifyMove(move, pokemon) {
+			if (move?.flags?.bite && move.category !== 'Status') {
+				if (!move.drain) {
+					move.drain = pokemon.volatiles['frenzy'] ? [1, 4] : [1, 2];
+				} else if (pokemon.volatiles['frenzy']) {
+					move.drain = [1, 4];
+				}
+			}
+		},
+		onAfterMoveSecondarySelf(source, target, move) {
+			if (!target || target.fainted) return;
+			if (move?.flags?.contact && !target.hasType('Ghost')) {
+				if (this.randomChance(3, 10) && !target.volatiles['bleeding']) {
+					target.addVolatile('bleeding', source);
+					this.add('-message', `${target.name} starts bleeding!`);
+				}
+			}
+			if (move?.id === 'glare') {
+				if (this.effectState.glareWasAlreadyPar && target.status === 'par' && !target.hasType('Psychic')) {
+					if (!target.volatiles['brainwashed']) {
+						target.addVolatile('brainwashed', source);
+						this.add('-anim', source, 'Hypnosis', target);
+						this.add('-message', `${target.name} was brainwashed!`);
+					}
+				}
+				this.effectState.glareWasAlreadyPar = false;
+			}
+		},
+		onSwitchOut(pokemon) {
+			// Clear disguise on leave
+			if ((pokemon as any).illusion) (pokemon as any).illusion = null;
+			(pokemon.m as any).hemolustRevealTypeLater = false;
+			if (!pokemon.item && pokemon.species.id === 'gligar' && !pokemon.fainted) {
+				pokemon.setItem('bloodpacks');
+				this.add('-item', pokemon, 'Blood Packs', '[from] ability: Hemolust');
+			}
+		},
+	},
+	// Suika Ibuki
+	densitymanipulation: {
+		desc: "This Pokemon sets a Substitute and loses 33% of their max HP upon switching in.",
+		shortDesc: "Switch-in: -33% HP, sets Substitute.",
+		onSwitchIn(pokemon) {
+			if (pokemon.hp > pokemon.maxhp / 3) {
+				this.add('-activate', pokemon, 'Density Manipulation');
+				pokemon.addVolatile('substitute');
+				pokemon.volatiles['substitute'].hp = 1;
+				this.directDamage(pokemon.maxhp / 3, pokemon);
+			}
+		},
+		flags: {},
+		name: "Density Manipulation",
+		gen: 9,
+	},
+	// Tao
+	shangqing: {
+		name: "Shangqing",
+		gen: 9,
+		flags: {},
+		desc: "This Pokemon is permanently tormented, and its Fighting-type moves can hit Ghost-type Pokemon for neutral damage. Whenever this Pokemon lands a critical hit, it immediately uses Ziran. This Pokemon's attacks that would KO, barring Ziran, instead leave the foe at 1 HP, paralyzed, and forces them to switch.",
+		shortDesc: "Torment; Fighting hits Ghost; Crit: Ziran.",
+		onUpdate(pokemon) {
+			for (const target of pokemon.foes()) {
+				if (!target.volatiles['shangqing']) target.addVolatile('shangqing');
+			}
+			if (!pokemon.volatiles['torment']) {
+				this.add('-activate', pokemon, 'Shangqing');
+				pokemon.addVolatile('torment');
+			}
+		},
+		onResidual(pokemon) {
+			this.effectState.ziranUsed = false;
+			if (pokemon.volatiles['torment']) {
+				pokemon.volatiles['torment'].duration++;
+			}
+			for (const target of this.getAllActive()) {
+				if (target.m.eotSwitch) {
+					target.m.eotSwitch = false;
+					target.forceSwitchFlag = true;
+				}
+			}
+		},
+		onModifyDamage(damage, source, target, move) {
+			if (move.id !== 'ziran' && damage >= target.hp) {
+				this.effectState.koTrigger = true;
+				return target.hp - 1;
+			}
+		},
+		onAfterMoveSecondarySelf(source, target, move) {
+			if (this.effectState.koTrigger) {
+				target.trySetStatus('par', source);
+				target.m.eotSwitch = true;
+				this.effectState.koTrigger = false;
+			}
+			if (target.getMoveHitData(move).crit && !this.effectState.ziranUsed) {
+				this.effectState.ziranUsed = true;
+				this.actions.useMove('Ziran', source, target);
+			}
+		},
+		onSwitchOut(pokemon) {
+			for (const target of pokemon.foes()) {
+				if (target.volatiles['shangqing']) target.removeVolatile('shangqing');
+			}
+		},
+		condition: {
+			noCopy: true,
+			onNegateImmunity(pokemon, type) {
+				if (pokemon.hasType('Ghost') && ['Normal', 'Fighting'].includes(type)) return false;
+			},
+			onSwitchOut(pokemon) {
+				pokemon.removeVolatile('shangqing');
+			},
+		},
+	},
+	// Toshiro
+	daigurenhyorinmaru: {
+		name: "Daiguren Hyorinmaru",
+		gen: 9,
+		flags: {notrace: 1, failroleplay: 1, noreceiver: 1, noentrain: 1, failskillswap: 1},
+		shortDesc: "Lotus Flowers (12). Stat scaling + freezes. Lotus drains on-field, regens off-field.",
+		desc: "Starts with 12 Lotus Flowers. +10% to Atk/Def/SpA/SpD/Spe per Lotus Flower. Lotus drains by 1 each turn while on the field. Attacking spends 1 Lotus per hit; chance to freeze scales with Lotus at move start. If it freezes or KOs, it spends 2 extra Lotus. When hit by a contact move while above 5 Lotus, it can freeze the attacker and spends 5 Lotus. Lotus regens by 1 each turn while benched (max 12).",
+		onStart(pokemon) {
+			if (pokemon.m.lotus === undefined) pokemon.m.lotus = 12;
+			pokemon.m.sennenUsed = false;
+			this.field.addPseudoWeather('offfieldfreezetick');
+		},
+		onSwitchIn(pokemon) {
+			pokemon.m.sennenUsed = false;
+			this.field.addPseudoWeather('offfieldfreezetick'); 
+		},
+		onModifyAtk(atk, pokemon) {
+			const lotus = pokemon.m.lotus ?? 12;
+			return this.chainModify(1 + 0.1 * lotus);
+		},
+		onModifyDef(def, pokemon) {
+			const lotus = pokemon.m.lotus ?? 12;
+			return this.chainModify(1 + 0.1 * lotus);
+		},
+		onModifySpA(spa, pokemon) {
+			const lotus = pokemon.m.lotus ?? 12;
+			return this.chainModify(1 + 0.1 * lotus);
+		},
+		onModifySpD(spd, pokemon) {
+			const lotus = pokemon.m.lotus ?? 12;
+			return this.chainModify(1 + 0.1 * lotus);
+		},
+		onModifySpe(spe, pokemon) {
+			const lotus = pokemon.m.lotus ?? 12;
+			return this.chainModify(1 + 0.1 * lotus);
+		},
+		onResidual(pokemon) {
+			if (pokemon.m.lotus === undefined) pokemon.m.lotus = 12;
+			const oldLotus = pokemon.m.lotus;
+			if (pokemon.m.lotus > 0) pokemon.m.lotus -= 1;
+			if (oldLotus !== pokemon.m.lotus) {
+				this.add('-message', pokemon.name + "'s Lotus Flowers: " + oldLotus + " -> " + pokemon.m.lotus + " (end of turn drain)");
+			}
+			if (pokemon.m.lotus === 0) this.add('-message', pokemon.name + "'s Lotus Flowers ran dry!");
+		},
+		onPrepareHit(target, source, move) {
+			if (!move || move.category === 'Status') return;
+			const es: any = this.effectState;
+			// Reset per move per turn
+			if (es.lastTurn !== this.turn || es.lastMove !== move.id) {
+				es.lastTurn = this.turn;
+				es.lastMove = move.id;
+				es.lotusStart = source.m.lotus ?? 12;
+				es.lotusHandled = false;
+				(source.m as any).lotusStartThisMove = es.lotusStart;
+			}
+		},
+		onModifyMove(move, pokemon, target) {
+			if (!move || move.category === 'Status') return;
+			if ((move as any).lotusWrapped) return;
+			(move as any).lotusWrapped = true;
+			const oldOnBasePower = move.onBasePower;
+			move.onBasePower = function (basePower, source, target2, move2) {
+				if (source && (source as any).m) {
+					const startLotus = ((source as any).m as any).lotusStartThisMove;
+					const start = (startLotus === undefined ? ((source as any).m.lotus ?? 12) : startLotus);
+					const cur = ((source as any).m.lotus ?? 12);
+					const startMult = 1 + 0.1 * start;
+					const curMult = 1 + 0.1 * cur;
+					const ratio = curMult / startMult;
+					if (ratio !== 1) return (this as any).chainModify(ratio);
+				}
+				if (oldOnBasePower) return oldOnBasePower.call(this, basePower, source, target2, move2);
+			};
+			const oldOnHit = move.onHit;
+			move.onHit = function (target2, source2, move2) {
+				if (source2 && (source2 as any).m) {
+					const lotus = (source2 as any).m.lotus ?? 12;
+					if (lotus > 0) (source2 as any).m.lotus = lotus - 1;
+				}
+				if (oldOnHit) return oldOnHit.call(this, target2, source2, move2);
+			};
+		},
+		onAfterMove(pokemon, target, move) {
+			if (!target || target === pokemon) return;
+			if (!move || move.category === 'Status') return;
+			if (pokemon.fainted) return;
+			const hit = target.getMoveHitData(move)?.hit;
+			if (!hit) return;
+			const es: any = this.effectState;
+			if (es.lotusHandled) return;
+			es.lotusHandled = true;
+			const startLotus = (es.lotusStart ?? (pokemon.m.lotus ?? 12));
+			const beforeLotus = startLotus;
+			const chance = Math.max(0, Math.min(100, startLotus * 3));
+			let froze = false;
+			if (chance > 0 && this.randomChance(chance, 100)) {
+				const ok = target.trySetStatus('frz', pokemon, move);
+				if (ok) {
+					target.m.ssbFreezeTurns = 2;
+					froze = true;
+					this.add('-message', target.name + " was frozen by falling petals!");
+				}
+			}
+			if (froze || target.fainted) {
+				const cur = pokemon.m.lotus ?? 12;
+				pokemon.m.lotus = Math.max(0, cur - 2);
+			}
+			const afterLotus = pokemon.m.lotus ?? 12;
+			if (beforeLotus !== afterLotus) {
+				this.add('-message', pokemon.name + "'s Lotus Flowers: " + beforeLotus + " -> " + afterLotus + " (after attack)");
+			}
+			if (afterLotus === 0) this.add('-message', pokemon.name + "'s Lotus Flowers ran dry!");
+		},
+		onDamagingHit(damage, target, source, move) {
+			if (!source || source.fainted) return;
+			if (!move || !move.flags || !move.flags.contact) return;
+			const lotus = target.m.lotus ?? 12;
+			if (lotus <= 5) return;
+			const oldLotus = lotus;
+			const ok = source.trySetStatus('frz', target, move);
+			if (ok) {
+				source.m.ssbFreezeTurns = 3;
+				this.add('-message', source.name + " was flash-frozen by Daiguren Hyorinmaru!");
+			}
+			target.m.lotus = Math.max(0, lotus - 5);
+			if (oldLotus !== target.m.lotus) {
+				this.add('-message', target.name + "'s Lotus Flowers: " + oldLotus + " -> " + target.m.lotus + " (contact freeze retaliation)");
+			}
+		},
+	},
+	// Trey
+	concentration: {
+		desc: "Starts Dynamite Arrow on the opposing side upon switching in. This Pokemon has x1.3 speed. This Pokemon's attacks cannot miss. This Pokemon's attacks have 1.5x power and +2 crit ratio after one full turn of not being attacked.",
+		shortDesc: "See '/ssb Trey' for more!",
+		onStart(pokemon) {
+			const target = pokemon.side.foe.active[pokemon.side.foe.active.length - 1 - pokemon.position];
+			target.side.addSideCondition('dynamitearrow');
+			this.add('-anim', pokemon, 'Ember', pokemon);
+			this.add('-message', `${pokemon.name} is preparing Dynamite Arrow!`);
+			this.add('-message', `${pokemon.name} is building concentration!`);
+			pokemon.m.damaged = false;
+			pokemon.m.concentrated = true;
+		},
+		onDamagingHit(damage, target, source, move) {
+			if (!target.m.damaged && target.m.concentrated) {
+				target.m.damaged = true;
+				target.m.concentrated = false;
+				this.add('-message', `${target.name} lost their concentration!`);
+			}
+		},
+		onSourceModifyAccuracyPriority: -1,
+		onSourceModifyAccuracy(accuracy) {
+			if (typeof accuracy !== 'number') return;
+			this.debug('concentration - user will not miss');
+			return true;
+		},
+		onResidual(pokemon, target) {
+			if (!pokemon.m.damaged && !pokemon.m.concentrated) {
+				pokemon.m.concentrated = true;
+				this.add('-anim', pokemon, 'Focus Energy', pokemon);
+				this.add('-message', `${pokemon.name} is building concentration!`);
+				return;
+			}
+			pokemon.m.damaged = false;
+		},
+		onBasePowerPriority: 29,
+		onBasePower(basePower, pokemon, target, move) {
+			if (pokemon.m.concentrated) {
+				this.debug(`concentration bp boost, concentration disabled`);
+				pokemon.m.concentrated = false;
+				return move.basePower * 1.5;
+			}
+			return move.basePower;
+		},
+		onModifyCritRatio(critRatio, pokemon, target, move) {
+			if (pokemon.m.concentrated) {
+				return move.critRatio + 2;
+			}
+			return move.critRatio;
+		},
+		flags: {},
+		name: "Concentration",
+		gen: 9,
+	},
+	// Urabrask
+	praetorsgrasp: {
+		name: "Praetor's Grasp",
+		desc: "Opposing Pokemon that have been active for less than 2 turns are prevented from switching.",
+		shortDesc: "Opposing Pokemon that have been active for less than 2 turns cannot switch.",
+		gen: 9,
+		onFoeTrapPokemon(pokemon) {
+			if (!pokemon.activeTurns || pokemon.activeTurns < 2) pokemon.tryTrap(true);
+		},
+	},
+	// Yukari Yakumo
+	spiritingaway: {
+		desc: "After using a move, this Pokemon switches to an ally of the user's choice. Sleep turns still burn while inactive.",
+		shortDesc: "User switches after move; sleep turns burn while inactive.",
+		onTryMove(pokemon, target, move) {
+			if (move.id === 'futuresight') pokemon.m.fsSwitch = true;
+		},
+		onAfterMoveSecondarySelf(source, target, move) {
+			source.switchFlag = true;
+		},
+		onSwitchOut(pokemon) {
+			if (pokemon.status === 'slp') {
+				pokemon.m.sleepBurn = true;
+				pokemon.m.ts = this.turn;
+			}
+		},
+		onUpdate(pokemon) {
+			if (pokemon.m.fsSwitch) {
+				pokemon.m.fsSwitch = false;
+				pokemon.switchFlag = true;
+			}
+		},
+		onSwitchIn(pokemon) {
+			if (pokemon.m.sleepBurn && pokemon.status === 'slp') {
+				const turnsBurned = this.turn - pokemon.m.ts;
+				pokemon.statusState.time -= turnsBurned;
+				if (!pokemon.statusState.time || pokemon.statusState.time <= 0) pokemon.cureStatus();
+				pokemon.m.sleepBurn = false;
+				pokemon.m.ts = 0;
+			}
+		},
+		flags: {},
+		name: "Spiriting Away",
+		gen: 9,
+	},
+	// Zeeb
+	nutcracker: {
+		name: "Nutcracker",
+		gen: 9,
+		shortDesc: "Uses Speed in damage calculation. x1.33 damage to Males.",
+		desc: "Uses Speed in damage calculation instead of Attack or Special Attack. This Pokemon's attacks deal x1.33 damage to opposing Male Pokemon.",
+		onSwitchIn(pokemon) {
+			this.add('-anim', pokemon, 'Celebrate', pokemon);
+		},
+		onModifyMove(move, pokemon, target) {
+			if (move.category !== "Status") {
+				move.overrideOffensiveStat = 'spe';
+			}
+		},
+		onBasePowerPriority: 24,
+		onBasePower(basePower, attacker, defender, move) {
+			if (defender.gender === 'M') {
+				this.debug('nutcracker boost');
+				return this.chainModify(1.33);
+			}
+		},
+	},
+	// Graaz
+	feralinstinct: {
+		gen: 9,
+		name: "Feral Instinct",
+		desc: "Raises this Pokemon's Speed by 1 when switching in or gaining Feral Instinct. This Pokemon cannot be flinched or confused. This Pokemon takes 3/4 damage from Fighting-type attacks.",
+		shortDesc: "+1 SPE/Cannot be flinched/confused; 3/4 damage from Fighting.",
+		onCriticalHit: false,
+		onStart(pokemon) {
+			this.boost({spe: 1}, pokemon, pokemon, this.dex.abilities.get('feralinstinct'));
+		},
+		onSourceModifyDamage(damage, source, target, move) {
+			if (move.type === 'Fighting') {
+				return this.chainModify(0.75);
+			}
+		},
+		onTryAddVolatile(status, pokemon) {
+			if (status.id === 'confusion') return null;
 		},
 	},
 	// Horrific17
@@ -478,95 +2128,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			},
 		},
 	},
-	// Shigeki
-	hemolust: {
-		name: "Hemolust",
-		gen: 9,
-		shortDesc: "Dark/Bug. Illusion. 0.75x dmg taken while disguised. Contact: 30% Bleeding. Glare vs already-par -> Brainwashed. Restock Blood Packs on switch if empty.",
-		desc: "This Pokemon becomes Dark/Bug. It disguises itself as the last unfainted Pokemon in its party until hit by a damaging move. While disguised, it takes 25% less damage. Its contact moves have a 30% chance to inflict Bleeding (Ghost immune). If it uses Glare on an already-paralyzed target, it inflicts Brainwashed (Psychic immune). Bite moves drain 50% (25% in Frenzy). If it has no item, it gains Blood Packs when switching out.",
-		onStart(pokemon) {
-			pokemon.setType(['Dark', 'Bug']);
-			if (!(pokemon as any).illusion) {
-				this.add('-start', pokemon, 'typechange', 'Dark/Bug', '[silent]');
-			} else {
-				(pokemon.m as any).hemolustRevealTypeLater = true;
-			}
-			this.effectState.glareWasAlreadyPar = false;
-		},
-		// Set disguise when coming in
-		onBeforeSwitchIn(pokemon) {
-			let illusion: Pokemon | null = null;
-			for (let i = pokemon.side.pokemon.length - 1; i >= 0; i--) {
-				const p = pokemon.side.pokemon[i];
-				if (!p.fainted && p !== pokemon) { illusion = p; break; }
-			}
-			if (illusion) {
-				(pokemon as any).illusion = illusion;
-			}
-		},
-		// 25% less damage taken while illusion is active
-		onSourceModifyDamage(damage, source, target, move) {
-			if ((target as any).illusion) return this.chainModify([3072, 4096]); // 0.75
-		},
-		onModifyDamage(damage, source, target, move) {
-			if ((target as any).illusion) return this.chainModify([3072, 4096]); // safety hook
-		},
-		// BREAK disguise when hit by a damaging move
-		onDamagingHit(damage, target, source, move) {
-			if (!(target as any).illusion) return;
-			(target as any).illusion = null;
-			const details = (target as any).getUpdatedDetails();
-			this.add('replace', target, details);
-			this.add('-end', target, 'Illusion');
-			if ((target.m as any).hemolustRevealTypeLater) {
-				this.add('-start', target, 'typechange', 'Dark/Bug', '[silent]');
-				(target.m as any).hemolustRevealTypeLater = false;
-			}
-		},
-		// Record whether the Glare target was already paralyzed BEFORE the move lands
-		onTryHit(target, source, move) {
-			if (move?.id === 'glare') {
-				this.effectState.glareWasAlreadyPar = (target.status === 'par');
-			}
-		},
-		onModifyMove(move, pokemon) {
-			if (move?.flags?.bite && move.category !== 'Status') {
-				if (!move.drain) {
-					move.drain = pokemon.volatiles['frenzy'] ? [1, 4] : [1, 2];
-				} else if (pokemon.volatiles['frenzy']) {
-					move.drain = [1, 4];
-				}
-			}
-		},
-		onAfterMoveSecondarySelf(source, target, move) {
-			if (!target || target.fainted) return;
-			if (move?.flags?.contact && !target.hasType('Ghost')) {
-				if (this.randomChance(3, 10) && !target.volatiles['bleeding']) {
-					target.addVolatile('bleeding', source);
-					this.add('-message', `${target.name} starts bleeding!`);
-				}
-			}
-			if (move?.id === 'glare') {
-				if (this.effectState.glareWasAlreadyPar && target.status === 'par' && !target.hasType('Psychic')) {
-					if (!target.volatiles['brainwashed']) {
-						target.addVolatile('brainwashed', source);
-						this.add('-anim', source, 'Hypnosis', target);
-						this.add('-message', `${target.name} was brainwashed!`);
-					}
-				}
-				this.effectState.glareWasAlreadyPar = false;
-			}
-		},
-		onSwitchOut(pokemon) {
-			// Clear disguise on leave
-			if ((pokemon as any).illusion) (pokemon as any).illusion = null;
-			(pokemon.m as any).hemolustRevealTypeLater = false;
-			if (!pokemon.item && pokemon.species.id === 'gligar' && !pokemon.fainted) {
-				pokemon.setItem('bloodpacks');
-				this.add('-item', pokemon, 'Blood Packs', '[from] ability: Hemolust');
-			}
-		},
-	},
 	// Cinque
 	cheerleader: {
 		name: "Cheerleader",
@@ -634,440 +2195,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			return critRatio + this.effectState.attacksTaken;
 		},
 	},
-	// Koiru
-	triplethreat: {
-		name: "Triple Threat",
-		gen: 9,
-		shortDesc: "3 modes w/ Grades D->S that tick each turn (even benched). Coil Connection swaps modes.",
-		desc: "Coil Connection swaps modes (Gravity/Speed/Regen). Grades D->S tick each turn and persist even benched. At end of S Grade turn, user is forced to switch and gives Tether to the incoming ally; grade becomes C. Grade resets to D when switching modes.",
-		onStart(pokemon) {
-			if (!pokemon.m.coilMode) pokemon.m.coilMode = 'gravity';
-			if (!pokemon.m.coilGrade) pokemon.m.coilGrade = 'D';
-			this.add('-message', `${pokemon.name} armed its coils! (${pokemon.m.coilMode.toUpperCase()} | Grade ${pokemon.m.coilGrade})`);
-		},
-		onSwitchIn(pokemon) {
-			const mode = (pokemon.m.coilMode ? String(pokemon.m.coilMode).toUpperCase() : 'GRAVITY');
-			const grade = (pokemon.m.coilGrade ? pokemon.m.coilGrade : 'D');
-			this.add('-message', pokemon.name + " enters: " + mode + " | Grade " + grade);
-		},
-		// ===== Mode buff helpers =====
-		onModifyAtk(atk, pokemon) {
-			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
-			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
-			if (mode === 'gravity' || mode === 'fusion') {
-				const mult = (g === 'D') ? 1 :
-					(g === 'C') ? 1.2 :
-					(g === 'B') ? 1.3 :
-					(g === 'A') ? 1.4 : 1.5;
-				return this.chainModify(mult);
-			}
-			return;
-		},
-		onModifySpe(spe, pokemon) {
-			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
-			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
-			if (mode === 'speed' || mode === 'fusion') {
-				const mult = (g === 'D') ? 1 :
-					(g === 'C') ? 1.2 :
-					(g === 'B') ? 1.3 :
-					(g === 'A') ? 1.4 : 1.5;
-				return this.chainModify(mult);
-			}
-			return;
-		},
-		// Weight scaling (Gravity + Fusion)
-		onModifyWeight(weighthg, pokemon) {
-			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
-			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
-			if (mode !== 'gravity' && mode !== 'fusion') return;
-			const mult = (g === 'D') ? 2 :
-				(g === 'C') ? 4 :
-				(g === 'B') ? 6 :
-				(g === 'A') ? 8 : 10;
-			return Math.floor(weighthg * mult);
-		},
-		onModifyAccuracy(accuracy, target, source, move) {
-			if (!move || move.category === 'Status') return;
-			if (target !== this.effectState.target) return;
-			const mode = target.volatiles['coilfusion'] ? 'fusion' : target.m.coilMode;
-			const g = target.volatiles['coilfusion'] ? 'B' : (target.m.coilGrade || 'D');
-			if (mode !== 'speed' && mode !== 'fusion') return;
-			if (accuracy === true) return;
-			const evMult =
-				(g === 'D') ? 1.1 :
-				(g === 'C') ? 1.2 :
-				(g === 'B') ? 1.3 :
-				(g === 'A') ? 1.4 : 1.5;
-			return this.chainModify(1 / evMult);
-		},
-		// Regen healing while ACTIVE (Fusion also counts)
-		onResidual(pokemon) {
-			const mode = pokemon.volatiles['coilfusion'] ? 'fusion' : pokemon.m.coilMode;
-			const g = pokemon.volatiles['coilfusion'] ? 'B' : (pokemon.m.coilGrade || 'D');
-			if (mode === 'regen' || mode === 'fusion') {
-				// D 1/16, C 1/8, B 1/4, A 1/2, S 1/2
-				const frac =
-					(g === 'D') ? [1, 16] :
-					(g === 'C') ? [1, 8] :
-					(g === 'B') ? [1, 4] :
-					[1, 2];
-				this.heal(pokemon.maxhp * (frac[0] / frac[1]), pokemon, pokemon, this.dex.abilities.get('triplethreat'));
-				this.add('-anim', pokemon, 'Recover', pokemon);
-			}
-		},
-	},	
-	// Marvin
-	murderousmimic: {
-		name: "Murderous Mimic",
-		gen: 9,
-		flags: {},
-		shortDesc: "Transforms into an ally of choice when using Mimic.",
-		onModifyMove(move, pokemon) {
-			if (move.id === 'mimic') {
-				move.onAfterMove = function (p, t, m) {
-					this.add('-activate', p, 'ability: Murderous Mimic');
-					p.side.addSlotCondition(p, 'mimic');
-					p.switchFlag = true;
-				};
-			}
-		},
-		onSwitchOut(pokemon) {
-			if (pokemon.species.name !== 'Darmanitan-Galar-Zen') changeSet(this, pokemon, ssbSets['Marvin'], true);
-		},
-	},
-	// Tao
-	shangqing: {
-		name: "Shangqing",
-		gen: 9,
-		flags: {},
-		desc: "This Pokemon is permanently tormented, and its Fighting-type moves can hit Ghost-type Pokemon for neutral damage. Whenever this Pokemon lands a critical hit, it immediately uses Ziran. This Pokemon's attacks that would KO, barring Ziran, instead leave the foe at 1 HP, paralyzed, and forces them to switch.",
-		shortDesc: "Torment; Fighting hits Ghost; Crit: Ziran.",
-		onUpdate(pokemon) {
-			for (const target of pokemon.foes()) {
-				if (!target.volatiles['shangqing']) target.addVolatile('shangqing');
-			}
-			if (!pokemon.volatiles['torment']) {
-				this.add('-activate', pokemon, 'Shangqing');
-				pokemon.addVolatile('torment');
-			}
-		},
-		onResidual(pokemon) {
-			this.effectState.ziranUsed = false;
-			if (pokemon.volatiles['torment']) {
-				pokemon.volatiles['torment'].duration++;
-			}
-			for (const target of this.getAllActive()) {
-				if (target.m.eotSwitch) {
-					target.m.eotSwitch = false;
-					target.forceSwitchFlag = true;
-				}
-			}
-		},
-		onModifyDamage(damage, source, target, move) {
-			if (move.id !== 'ziran' && damage >= target.hp) {
-				this.effectState.koTrigger = true;
-				return target.hp - 1;
-			}
-		},
-		onAfterMoveSecondarySelf(source, target, move) {
-			if (this.effectState.koTrigger) {
-				target.trySetStatus('par', source);
-				target.m.eotSwitch = true;
-				this.effectState.koTrigger = false;
-			}
-			if (target.getMoveHitData(move).crit && !this.effectState.ziranUsed) {
-				this.effectState.ziranUsed = true;
-				this.actions.useMove('Ziran', source, target);
-			}
-		},
-		onSwitchOut(pokemon) {
-			for (const target of pokemon.foes()) {
-				if (target.volatiles['shangqing']) target.removeVolatile('shangqing');
-			}
-		},
-		condition: {
-			noCopy: true,
-			onNegateImmunity(pokemon, type) {
-				if (pokemon.hasType('Ghost') && ['Normal', 'Fighting'].includes(type)) return false;
-			},
-			onSwitchOut(pokemon) {
-				pokemon.removeVolatile('shangqing');
-			},
-		},
-	},
-	//Toshiro
-	daigurenhyorinmaru: {
-		name: "Daiguren Hyorinmaru",
-		gen: 9,
-		flags: {notrace: 1, failroleplay: 1, noreceiver: 1, noentrain: 1, failskillswap: 1},
-		shortDesc: "Lotus Flowers (12). Stat scaling + freezes. Lotus drains on-field, regens off-field.",
-		desc: "Starts with 12 Lotus Flowers. +10% to Atk/Def/SpA/SpD/Spe per Lotus Flower. Lotus drains by 1 each turn while on the field. Attacking spends 1 Lotus per hit; chance to freeze scales with Lotus at move start. If it freezes or KOs, it spends 2 extra Lotus. When hit by a contact move while above 5 Lotus, it can freeze the attacker and spends 5 Lotus. Lotus regens by 1 each turn while benched (max 12).",
-		onStart(pokemon) {
-			if (pokemon.m.lotus === undefined) pokemon.m.lotus = 12;
-			pokemon.m.sennenUsed = false;
-			this.field.addPseudoWeather('offfieldfreezetick');
-		},
-		onSwitchIn(pokemon) {
-			pokemon.m.sennenUsed = false;
-			this.field.addPseudoWeather('offfieldfreezetick'); 
-		},
-		onModifyAtk(atk, pokemon) {
-			const lotus = pokemon.m.lotus ?? 12;
-			return this.chainModify(1 + 0.1 * lotus);
-		},
-		onModifyDef(def, pokemon) {
-			const lotus = pokemon.m.lotus ?? 12;
-			return this.chainModify(1 + 0.1 * lotus);
-		},
-		onModifySpA(spa, pokemon) {
-			const lotus = pokemon.m.lotus ?? 12;
-			return this.chainModify(1 + 0.1 * lotus);
-		},
-		onModifySpD(spd, pokemon) {
-			const lotus = pokemon.m.lotus ?? 12;
-			return this.chainModify(1 + 0.1 * lotus);
-		},
-		onModifySpe(spe, pokemon) {
-			const lotus = pokemon.m.lotus ?? 12;
-			return this.chainModify(1 + 0.1 * lotus);
-		},
-		// Drain 1 lotus at end of every turn while active
-		onResidual(pokemon) {
-			if (pokemon.m.lotus === undefined) pokemon.m.lotus = 12;
-			const oldLotus = pokemon.m.lotus;
-			if (pokemon.m.lotus > 0) pokemon.m.lotus -= 1;
-			if (oldLotus !== pokemon.m.lotus) {
-				this.add('-message', pokemon.name + "'s Lotus Flowers: " + oldLotus + " -> " + pokemon.m.lotus + " (end of turn drain)");
-			}
-			if (pokemon.m.lotus === 0) this.add('-message', pokemon.name + "'s Lotus Flowers ran dry!");
-		},
-		// Record lotus at START of the move (no template strings)
-		onPrepareHit(target, source, move) {
-			if (!move || move.category === 'Status') return;
-			const es: any = this.effectState;
-			// Reset per move per turn
-			if (es.lastTurn !== this.turn || es.lastMove !== move.id) {
-				es.lastTurn = this.turn;
-				es.lastMove = move.id;
-				es.lotusStart = source.m.lotus ?? 12;
-				es.lotusHandled = false;
-				(source.m as any).lotusStartThisMove = es.lotusStart;
-			}
-		},
-		// Make multihit spend lotus per HIT, and (optional) ensure power drops per hit even if stats are cached
-		onModifyMove(move, pokemon, target) {
-			if (!move || move.category === 'Status') return;
-			if ((move as any).lotusWrapped) return;
-			(move as any).lotusWrapped = true;
-			const oldOnBasePower = move.onBasePower;
-			move.onBasePower = function (basePower, source, target2, move2) {
-				if (source && (source as any).m) {
-					const startLotus = ((source as any).m as any).lotusStartThisMove;
-					const start = (startLotus === undefined ? ((source as any).m.lotus ?? 12) : startLotus);
-					const cur = ((source as any).m.lotus ?? 12);
-					const startMult = 1 + 0.1 * start;
-					const curMult = 1 + 0.1 * cur;
-					const ratio = curMult / startMult;
-					if (ratio !== 1) return (this as any).chainModify(ratio);
-				}
-				if (oldOnBasePower) return oldOnBasePower.call(this, basePower, source, target2, move2);
-			};
-			// Spend 1 lotus PER HIT
-			const oldOnHit = move.onHit;
-			move.onHit = function (target2, source2, move2) {
-				if (source2 && (source2 as any).m) {
-					const lotus = (source2 as any).m.lotus ?? 12;
-					if (lotus > 0) (source2 as any).m.lotus = lotus - 1;
-				}
-				if (oldOnHit) return oldOnHit.call(this, target2, source2, move2);
-			};
-		},
-		// Freeze chance and extra -2 once per move (uses lotusStart tracked above)
-		onAfterMove(pokemon, target, move) {
-			if (!target || target === pokemon) return;
-			if (!move || move.category === 'Status') return;
-			if (pokemon.fainted) return;
-			const hit = target.getMoveHitData(move)?.hit;
-			if (!hit) return;
-			const es: any = this.effectState;
-			if (es.lotusHandled) return;
-			es.lotusHandled = true;
-			const startLotus = (es.lotusStart ?? (pokemon.m.lotus ?? 12));
-			const beforeLotus = startLotus;
-			const chance = Math.max(0, Math.min(100, startLotus * 3));
-			let froze = false;
-			if (chance > 0 && this.randomChance(chance, 100)) {
-				const ok = target.trySetStatus('frz', pokemon, move);
-				if (ok) {
-					target.m.ssbFreezeTurns = 2;
-					froze = true;
-					this.add('-message', target.name + " was frozen by falling petals!");
-				}
-			}
-			if (froze || target.fainted) {
-				const cur = pokemon.m.lotus ?? 12;
-				pokemon.m.lotus = Math.max(0, cur - 2);
-			}
-			const afterLotus = pokemon.m.lotus ?? 12;
-			if (beforeLotus !== afterLotus) {
-				this.add('-message', pokemon.name + "'s Lotus Flowers: " + beforeLotus + " -> " + afterLotus + " (after attack)");
-			}
-			if (afterLotus === 0) this.add('-message', pokemon.name + "'s Lotus Flowers ran dry!");
-		},
-		// Contact retaliation freeze if lotus > 5: lose 5 lotus
-		onDamagingHit(damage, target, source, move) {
-			if (!source || source.fainted) return;
-			if (!move || !move.flags || !move.flags.contact) return;
-			const lotus = target.m.lotus ?? 12;
-			if (lotus <= 5) return;
-			const oldLotus = lotus;
-			const ok = source.trySetStatus('frz', target, move);
-			if (ok) {
-				source.m.ssbFreezeTurns = 3;
-				this.add('-message', source.name + " was flash-frozen by Daiguren Hyorinmaru!");
-			}
-			target.m.lotus = Math.max(0, lotus - 5);
-			if (oldLotus !== target.m.lotus) {
-				this.add('-message', target.name + "'s Lotus Flowers: " + oldLotus + " -> " + target.m.lotus + " (contact freeze retaliation)");
-			}
-		},
-	},	
-	// Flufi
-	forceofwill: {
-		name: "Force of Will",
-		gen: 9,
-		flags: {},
-		shortDesc: "Survives a KO attack with 1 HP. Moves have 1.33x/2x power.",
-		desc: "If this Pokemon would be knocked out by an attack, it survives at 1 HP. Once per battle. This Pokemon's moves have 1.33x power, or 2x power if this Pokemon has 1 HP remaining.",
-		onDamage(damage, target, source, effect) {
-			if (damage >= target.hp && effect && effect.effectType === 'Move' && !target.m.forceActivated) {
-				target.m.forceActivated = true;
-				this.add('-ability', target, 'Force of Will');
-				this.add('-anim', target, 'Inferno', target);
-				this.add('-message', `${target.name} isn't backing down!`);
-				return target.hp - 1;
-			}
-		},
-		onBasePowerPriority: 21,
-		onBasePower(basePower, pokemon, target, move) {
-			if (pokemon.hp === 1) {
-				return this.chainModify(2);
-			} else {
-				return this.chainModify(1.33);
-			}
-		},
-	},
-	// Saint Deli
-	generosity: {
-		name: "Generosity",
-		gen: 9,
-		flags: {},
-		desc: "Present becomes Ice-type/Special + Gives Charcoal; Life Dew heals unfainted party members 1/4 max HP; On switch out, summons Lucky Chant and cures allies of all status conditions. Upon fainting, summons Revival Blessing and grants permanent Helping Hand to all party members.",
-		shortDesc: "See '/ssb Saint Deli' for more!",
-		onModifyMove(move, pokemon) {
-			if (move.id === 'present') {
-				move.type = 'Ice';
-				move.category = 'Special';
-				move.onHit = function (t, s, m) {
-					const success = t.takeItem();
-					const newItem = this.dex.items.get('charcoal')
-					if (!success) return;
-					t.item = newItem.id;
-					t.setItem(newItem);
-					this.add('-item', t, newItem, '[from] move: Present');
-				};
-			}
-			if (move.id === 'lifedew') {
-				move.onAfterMoveSecondarySelf = function (p, t, m) {
-					for (const ally of p.side.pokemon) {
-						if (ally === p) continue;
-						if (!ally.hp || ally.hp >= ally.maxhp) continue;
-						if (ally.isActive) {
-							this.heal(ally.maxhp / 4, ally, s, this.effect);
-						} else {
-							ally.hp += ally.maxhp / 4;
-							this.add('-heal', ally, ally.getHealth);
-						}
-					}
-				};
-			}
-		},
-		onDamage(damage, target, source, effect) {
-			if (!target.m.sack) target.m.sack = [];
-			const move = this.dex.moves.get(effect.id);
-			const willTrigger = move.category === 'Special' && !target.m.sack.length
-			if (willTrigger || !move || target === source) return;
-			// if rbTriggered is true, that means Revival Blessing is queued and waiting to happen.
-			// Using this to avoid further damage from shenanigans, such as Zeeb's Slingshot
-			if (this.effectState.rbTriggered) return false;
-			if (damage >= target.hp) {
-				if (!this.effectState.rbTriggered) {
-					this.effectState.rbTriggered = true;
-					this.add('-activate', target, this.dex.abilities.get('generosity'));
-					this.actions.useMove('Revival Blessing', target);
-				}
-				return false;
-			}
-		},
-		onSwitchOut(pokemon) {
-			pokemon.side.addSideCondition('luckychant');
-			let success = false;
-			const allies = [...pokemon.side.pokemon, ...pokemon.side.allySide?.pokemon || []];
-			for (const ally of allies) {
-				if (ally.status) ally.cureStatus();
-			}
-		},
-		onFaint(pokemon) {
-			// Automatically applies Helping Hand to next ally that switches in
-			// Handled in .../sim/side.ts
-			pokemon.side.hhBoost = true;
-		},
-	},
-	// Gadget
-	cashgrab: {
-		name: "Cash Grab",
-		desc: "Whenever this Pokemon uses Pay Day or Stockpile, it collects 0-30 coins. This Pokemon's weight is multiplied by the number of coins stored.",
-		shortDesc: "Pay Day/Stockpile: Collects coins. Weight scales with coins.",
-		gen: 9,
-		flags: {},
-		onStart(pokemon) {
-			if (!pokemon.m.coins) pokemon.m.coins = 0;
-			this.effectState.coins = pokemon.m.coins;
-		},
-		onResidual(pokemon) {
-			if (!pokemon.m.coins) pokemon.m.coins = 0;
-			if (pokemon.m.coins === 0) {
-				this.add('-message', `${pokemon.name} boasts... no coins?!`);
-				this.add('-anim', pokemon, 'Splash', pokemon);
-				this.add('-message', 'Aw, man!');
-			} else {
-				this.add('-anim', pokemon, 'Taunt', pokemon);
-				if (pokemon.m.coins === 1) {
-					this.add('-message', `${pokemon.name} boasts one coin!`);
-				} else {
-					this.add('-message', `${pokemon.name} boasts ${pokemon.m.coins} coins!`);
-				}
-			}
-		},
-		onUpdate(pokemon) {
-			if (!pokemon.m.coins) pokemon.m.coins = 0;
-			this.effectState.coins = pokemon.m.coins;
-		},
-		onModifyWeight(weighthg) {
-			return weighthg * this.effectState.coins;
-		},
-		onAfterMoveSecondarySelf(source, target, move) {
-			if (['payday', 'stockpile'].includes(move.id)) {
-				this.add('-activate', source, 'ability: Cash Grab');
-				if (!source.m.coins) source.m.coins = 0;
-				const gain = this.random(31);
-				if (gain === 0) return;
-				this.add('-anim', source, 'Pay Day', source);
-				this.add('-anim', source, 'Tickle', source);
-				source.m.coins += gain;
-			}
-		},
-	},
 	// Rooci Caxa
 	horrorsoftheforest: {
 		name: "Horrors of the Forest",
@@ -1126,17 +2253,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			onEnd(target) {
 				this.add('-end', target, 'ability: Horrors of the Forest', '[silent]');
 			},
-		},
-	},
-	// Aevum
-	temporaldomain: {
-		name: "Temporal Domain",
-		desc: "On switch-in, this Pokemon summons Temporal Terrain for 5 turns. Lasts for 8 turns if the user is holding a Terrain Extender.",
-		shortDesc: "On switch-in, this Pokemon summons Temporal Terrain.",
-		gen: 9,
-		flags: {},
-		onStart(pokemon) {
-			this.field.setTerrain('temporalterrain');
 		},
 	},
 	// Kusanali
@@ -1387,22 +2503,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			}
 		},
 	},
-	// Suika Ibuki
-	densitymanipulation: {
-		desc: "This Pokemon sets a Substitute and loses 33% of their max HP upon switching in.",
-		shortDesc: "Switch-in: -33% HP, sets Substitute.",
-		onSwitchIn(pokemon) {
-			if (pokemon.hp > pokemon.maxhp / 3) {
-				this.add('-activate', pokemon, 'Density Manipulation');
-				pokemon.addVolatile('substitute');
-				pokemon.volatiles['substitute'].hp = 1;
-				this.directDamage(pokemon.maxhp / 3, pokemon);
-			}
-		},
-		flags: {},
-		name: "Density Manipulation",
-		gen: 9,
-	},
 	// Journeyman
 	loveofthejourney: {
 		name: "Love of the Journey",
@@ -1518,1088 +2618,5 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 				return false;
 			}
 		},
-	},
-	// Sakuya Izayoi
-	theworld: {
-		name: "The World",
-		gen: 9,
-		onSwitchIn(pokemon) {
-			if (!this.field.pseudoWeather['trickroom']) {
-				this.field.addPseudoWeather('trickroom');
-			} else {
-				this.field.removePseudoWeather('trickroom');
-			}
-		},
-		onFoeTryMove(target, source, move) {
-			if (move.category === 'Status' || move.flags['futuremove']) return;
-			if (!source.side.addSlotCondition(source, 'futuremove')) return;
-			Object.assign(source.side.slotConditions[source.position]['futuremove'], {
-				duration: 2,
-				move: move.id,
-				source: target,
-				moveData: {
-					id: move.id,
-					name: move.name,
-					accuracy: move.accuracy,
-					basePower: move.basePower,
-					category: move.category,
-					priority: move.priority,
-					flags: { allyanim: 1, metronome: 1, futuremove: 1, bypasssub: 1 },
-					ignoreImmunity: true,
-					effectType: 'Move',
-					type: move.type,
-				},
-			});
-			this.add('-start', source, 'move: ' + move.name, '[silent]');
-			this.add('-message', `${source.name} shifted ${move.name} into the future!`);
-			return this.NOT_FAIL;
-		},
-	},
-	// Emerl
-	perfectcopy: {
-		desc: "Upon switching in, this Pokemon adds a random move of the foe's to its moveset not already included. It also copies stat changes and ability.",
-		shortDesc: "Learns 1 enemy move; Copies stat changes, ability.",
-		onStart(pokemon) {
-			const target = pokemon.side.foe.active[pokemon.side.foe.active.length - 1 - pokemon.position];
-			// Replace Ability
-			if (target.ability !== 'perfectcopy') {
-				this.singleEvent('End', pokemon.getAbility(), pokemon.m, pokemon);
-				pokemon.setAbility(target.getAbility().id);
-				pokemon.m = { id: this.toID(target.ability), target: pokemon };
-			}
-			// Learning An Opponent's Move
-			let possibleMoves = [];
-			for (const moveSlot of target.moveSlots) {
-				if (pokemon.moves.includes(moveSlot.id)) continue;
-				possibleMoves.push(moveSlot.id);
-			}
-			if (possibleMoves.length) {
-				const moveid = this.sample(possibleMoves);
-				const move = this.dex.moves.get(moveid);
-				const newMove = {
-					move: move.name,
-					id: move.id,
-					pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-					maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-					target: move.target,
-					disabled: false,
-					used: false,
-				};
-				pokemon.baseMoveSlots[pokemon.moveSlots.length] = newMove;
-				pokemon.moveSlots[pokemon.moveSlots.length] = newMove;
-				this.add('-message', `${pokemon.name} copied ${target.name}'s ${target.getAbility().name} and ${this.dex.moves.get(pokemon.moveSlots[pokemon.moveSlots.length - 1].id).name}!`);
-			}
-			// Copying Stat Changes
-			const boosts: SparseBoostsTable = {};
-			let i: BoostID;
-			let boosted = false;
-			if (target.boosts) {
-				for (i in target.boosts) {
-					if (target.boosts[i] > 0) {
-						boosts[i] = target.boosts[i];
-						boosted = true;
-					}
-				}
-			}
-			if (boosted) {
-				this.add("-activate", pokemon, "ability: Perfect Copy");
-				this.boost(boosts, pokemon);
-				this.add('-message', `${pokemon.name} copied ${target.name}'s stat changes!`);
-			}
-		},
-		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1 },
-		name: "Perfect Copy",
-		gen: 9,
-	},
-	// Zeeb
-	nutcracker: {
-		name: "Nutcracker",
-		gen: 9,
-		shortDesc: "Uses Speed in damage calculation. x1.33 damage to Males.",
-		desc: "Uses Speed in damage calculation instead of Attack or Special Attack. This Pokemon's attacks deal x1.33 damage to opposing Male Pokemon.",
-		onSwitchIn(pokemon) {
-			this.add('-anim', pokemon, 'Celebrate', pokemon);
-		},
-		onModifyMove(move, pokemon, target) {
-			if (move.category !== "Status") {
-				move.overrideOffensiveStat = 'spe';
-			}
-		},
-		onBasePowerPriority: 24,
-		onBasePower(basePower, attacker, defender, move) {
-			if (defender.gender === 'M') {
-				this.debug('nutcracker boost');
-				return this.chainModify(1.33);
-			}
-		},
-	},
-	// Kaiser Dragon
-	elementalshift: {
-		desc: "This Pokemon becomes Fire/Grass/Water/Electric/Ice/Flying/Poison/Psychic/Fairy/Rock-type and sets the appropriate weather/terrain upon switching in.",
-		shortDesc: "Random type + corresponding move upon switch-in.",
-		onStart(pokemon) {
-			let r = this.random(10);
-			if (r === 0) {
-				this.add('-start', pokemon, 'typechange', 'Fire');
-				pokemon.setType('Fire');
-				this.actions.useMove('Sunny Day', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['willowisp', 'protect', 'magmastorm', 'firelash'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 1) {
-				this.add('-start', pokemon, 'typechange', 'Grass');
-				pokemon.setType('Grass');
-				this.actions.useMove('Grassy Terrain', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['leechseed', 'protect', 'hornleech', 'gigadrain'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 2) {
-				this.add('-start', pokemon, 'typechange', 'Water');
-				pokemon.setType('Water');
-				this.actions.useMove('Rain Dance', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['flipturn', 'hydrosteam', 'waterspout', 'aquatail'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 3) {
-				this.add('-start', pokemon, 'typechange', 'Electric');
-				pokemon.setType('Electric');
-				this.actions.useMove('Electric Terrain', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['thunderwave', 'voltswitch', 'charge', 'doubleshock'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 4) {
-				this.add('-start', pokemon, 'typechange', 'Ice');
-				pokemon.setType('Ice');
-				this.actions.useMove('Snowscape', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['auroraveil', 'freezyfrost', 'icespinner', 'blizzard'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 5) {
-				this.add('-start', pokemon, 'typechange', 'Flying');
-				pokemon.setType('Flying');
-				this.actions.useMove('Tailwind', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['roost', 'defog', 'aeroblast', 'beakblast'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 6) {
-				this.add('-start', pokemon, 'typechange', 'Poison');
-				pokemon.setType('Poison');
-				this.actions.useMove('Toxic Spikes', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['gunkshot', 'mortalspin', 'sludgebomb', 'clearsmog'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 7) {
-				this.add('-start', pokemon, 'typechange', 'Psychic');
-				pokemon.setType('Psychic');
-				this.actions.useMove('Psychic Terrain', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['lunardance', 'revivalblessing', 'futuresight', 'psychicfangs'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else if (r === 8) {
-				this.add('-start', pokemon, 'typechange', 'Fairy');
-				pokemon.setType('Fairy');
-				this.actions.useMove('Misty Terrain', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['moonlight', 'protect', 'sparklyswirl', 'spiritbreak'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			} else {
-				this.add('-start', pokemon, 'typechange', 'Rock');
-				pokemon.setType('Rock');
-				this.actions.useMove('Sandstorm', pokemon);
-				for (let i = 0; i < 4; i++) {
-					let moves = ['stealthrock', 'protect', 'saltcure', 'powergem'];
-					const move = this.dex.moves.get(moves[i]);
-					const newSlot = {
-						move: move.name,
-						id: move.id,
-						pp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						maxpp: (move.noPPBoosts || move.isZ) ? move.pp : move.pp * 8 / 5,
-						target: move.target,
-						disabled: false,
-						used: false,
-					};
-					pokemon.moveSlots[i] = newSlot;
-					pokemon.baseMoveSlots[i] = newSlot;
-				}
-			}
-		},
-		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, cantsuppress: 1 },
-		name: "Elemental Shift",
-		gen: 9,
-	},
-	// Shifu Robot
-	autorepair: {
-		name: "Auto Repair",
-		gen: 9,
-		// Handled in ../config/formats.ts
-	},
-	// Luminous
-	blindinglight: {
-		name: "Blinding Light",
-		gen: 9,
-		onStart(pokemon) {
-			this.add('-anim', pokemon, 'Flash', pokemon);
-			for (const target of this.getAllActive()) {
-				if (pokemon === target) continue;
-				target.addVolatile('blindinglight');
-			}
-		},
-		onModifyType(move, pokemon) {
-			this.debug(`LOR typechange to Light-type`);
-			if (move.id === 'lightofruin' && pokemon.species.id === 'necrozmaultra') move.type = 'Light';
-		},
-		condition: {
-			duration: 1,
-			onStart(pokemon) {
-				this.add('-message', `${pokemon.name} was struck by a blinding light!`);
-				this.boost({ accuracy: -6 }, pokemon);
-			},
-			onEnd(pokemon) {
-				this.add('-message', `The blinding light faded!`);
-				this.boost({ accuracy: 6 }, pokemon);
-			},
-		},
-	},
-	// PokeKart
-	chaindrift: {
-		name: "Chain Drift",
-		gen: 9,
-		onStart() {
-			this.effectState.damaged = false;
-		},
-		onDamagingHit(damage, target, source, move) {
-			if (!target || source === target) return;
-			this.boost({ spe: -1 }, target, source);
-			this.effectState.damaged = true;
-		},
-		onResidual(pokemon) {
-			if (this.effectState.damaged === false) {
-				this.boost({ spe: 1 }, pokemon);
-			}
-			this.effectState.damaged = false;
-		},
-	},
-	// Fblthp
-	lostandfound: {
-		name: "Lost and Found",
-		gen: 9,
-		desc: "Whenever this Pokemon is damaged by an attacking move, it takes 1/5 of the damage and immediately switches to an ally of choice. Three times per battle.",
-		shortDesc: "Takes 1/5 damage from attacks, then switches to ally of choice.",
-		onDamagePriority: 1,
-		onDamage(damage, target, source, effect) {
-			if (!target.m.switchCount) target.m.switchCount = 0;
-			if (target === source || !damage || effect.effectType !== 'Move' ||
-			target.m.switchCount >= 3 || target.side.totalFainted >= 5) return;
-
-			target.m.switchCount++;
-			this.add('-activate', target, 'ability: Lost and Found');
-			this.add('-anim', target, 'Dive', target);
-			this.add('-message', `${target.name} scrambled away from danger!`);
-			target.switchFlag = true;
-			this.add('-message', `${target.name} switch count: ${target.m.switchCount}`);
-			return damage / 5;
-		},
-	},
-	// Quetzalcoatl
-	pealofthunder: {
-		desc: "This Pokemon summons Electric Terrain when hit by Electric moves; Electric immunity.",
-		onTryHit(target, source, move) {
-			if (move.type === 'Electric') {
-				this.field.setTerrain('electricterrain');
-				this.add('-immune', target, '[from] ability: Peal of Thunder');
-				return null;
-			}
-		},
-		onResidual(pokemon) {
-			this.add('-activate', pokemon, 'Peal of Thunder');
-			this.effectState.runStatic = true;
-
-			let allTargets = [];
-			for (const target of this.getAllPokemon()) {
-				if (target.fainted || !target.hp) continue;
-				allTargets.push(target);
-			}
-			const target = this.sample(allTargets);
-
-			const move = this.dex.moves.get('thundershock');
-			const activeMove = {
-				move: move.name, id: move.id, basePower: 20, pp: move.pp, maxpp: move.pp,
-				target: move.target, disabled: false, used: false,
-			};
-			const damage = this.actions.getDamage(pokemon, target, activeMove);
-			this.add('-anim', pokemon, 'Thunderbolt', target.side.active[0]);
-
-			// First run an ability check and damage check to ensure target does not have PoT and damage is present
-			if (target.ability === 'pealofthunder') {
-				this.field.setTerrain('electricterrain');
-				this.add('-immune', target);
-				return;
-			}
-			if (!damage || damage <= 0) {
-				this.add('-immune', target);
-				return;
-			}
-			// Both checks break from the function if true. If the checks are passed, proceed to damage
-			// First checking if target is active or inactive, so we can use the correct function for damage
-			// this.damage does NOT work on inactive Pokemon, HP must be manually lowered; See below.
-			if (target.isActive) {
-				this.damage(damage, target, pokemon);
-			} else {
-				target.hp -= damage;
-				if (target.hp < 0) target.hp = 0;
-				this.add('-message', `${target.name} was hurt by Peal of Thunder!`);
-			}
-		},
-		onUpdate(pokemon) {
-			if (this.effectState.runStatic) {
-				this.effectState.runStatic = false;
-				this.add('-anim', pokemon, 'Charge', pokemon);
-				if (!pokemon.m.static) pokemon.m.static = 0;
-				if (this.field.terrain === 'electricterrain') {
-					pokemon.m.static += 2;
-					this.add('-message', `${pokemon.name} received two static counters!`);
-				} else {
-					pokemon.m.static++;
-					this.add('-message', `${pokemon.name} received a static counter!`);
-				}
-			}
-		},
-		name: "Peal of Thunder",
-		gen: 9,
-	},
-	// Yukari Yakumo
-	spiritingaway: {
-		desc: "After using a move, this Pokemon switches to an ally of the user's choice. Sleep turns still burn while inactive.",
-		shortDesc: "User switches after move; sleep turns burn while inactive.",
-		onTryMove(pokemon, target, move) {
-			if (move.id === 'futuresight') pokemon.m.fsSwitch = true;
-		},
-		onAfterMoveSecondarySelf(source, target, move) {
-			source.switchFlag = true;
-		},
-		onSwitchOut(pokemon) {
-			if (pokemon.status === 'slp') {
-				pokemon.m.sleepBurn = true;
-				pokemon.m.ts = this.turn;
-			}
-		},
-		onUpdate(pokemon) {
-			if (pokemon.m.fsSwitch) {
-				pokemon.m.fsSwitch = false;
-				pokemon.switchFlag = true;
-			}
-		},
-		onSwitchIn(pokemon) {
-			if (pokemon.m.sleepBurn && pokemon.status === 'slp') {
-				const turnsBurned = this.turn - pokemon.m.ts;
-				pokemon.statusState.time -= turnsBurned;
-				if (!pokemon.statusState.time || pokemon.statusState.time <= 0) pokemon.cureStatus();
-				pokemon.m.sleepBurn = false;
-				pokemon.m.ts = 0;
-			}
-		},
-		flags: {},
-		name: "Spiriting Away",
-		gen: 9,
-	},
-	// Cyclommatic Cell
-	batterylife: {
-		name: "Battery Life",
-		gen: 9,
-		shortDesc: "Stores charge to power up Electric moves/Techno Blast.",
-		desc: "This Pokemon stores up to five gauges of charge, starting at five at the start of battle. This Pokemon uses charge gauges to power up Electric moves and Techno Blast. Opposing Electric moves heal the user for 1/4 max HP and increase charge gauges; Electric immunity. Sets Electric Terrain and must recharge if the user runs out of charge gauges. Electric moves and Techno Blast fail if the user does not have enough charge gauges stored.",
-		onStart(pokemon) {
-			if (pokemon.m.gauges == null) pokemon.m.gauges = 5;
-		},
-		onBasePower(basePower, attacker, defender, move) {
-			if (move.category === 'Status') return;
-			let g: number = attacker.m.gauges;
-			if (g == null) g = attacker.m.gauges = 0;
-			if (g <= 1) return this.chainModify(0.5);
-			if (g === 2) return this.chainModify(0.75);
-			if (g === 4) return this.chainModify(1.25);
-			if (g >= 5) return this.chainModify(1.5);
-			// g === 3 => no modifier
-		},
-		onTryHit(target, source, move) {
-			if (target !== source && move.type === 'Electric') {
-				this.heal(Math.floor(target.baseMaxhp / 4), target);
-				target.addVolatile('charge');
-				if (target.m.gauges == null) target.m.gauges = 0;
-				if (target.m.gauges < 5) target.m.gauges++;
-				this.add('-message', `${target.name} was charged up by ${move.name}!`);
-				return null; // negates the hit
-			}
-		},
-		onBeforeMove(pokemon, target, move) {
-			if (move.category === 'Status') return;
-			if (pokemon.m.gauges == null) pokemon.m.gauges = 0;
-			let cost = 0;
-			if (move.id === 'technoblast') cost = 3;
-			else if (move.type === 'Electric') cost = 2;
-			if (!cost) return;
-			if (pokemon.m.gauges < cost) {
-				this.add('-message', `${pokemon.name} doesn't have enough battery!`);
-				return false;
-			}
-			pokemon.m.gauges -= cost;
-			this.add('-message', `${pokemon.name} used its battery to power up ${move.name}!`);
-		},
-		onResidual(pokemon) {
-			if (pokemon.m.gauges == null) pokemon.m.gauges = 0;
-			// If out of battery: enter recharge mode (but don't spam every turn)
-			if (pokemon.m.gauges <= 0) {
-				this.add('-anim', pokemon, 'Tickle', pokemon);
-				this.add('-message', `${pokemon.name} is out of battery!`);
-				// Only set terrain / mustrecharge if not already active
-				if (!this.field.isTerrain('electricterrain')) {
-					this.field.setTerrain('electricterrain');
-				}
-				if (!pokemon.volatiles['mustrecharge']) {
-					pokemon.addVolatile('mustrecharge');
-				}
-			} else if (pokemon.m.gauges >= 5) {
-				this.add('-anim', pokemon, 'Charge', pokemon);
-				if (!pokemon.volatiles['charge']) pokemon.addVolatile('charge');
-				this.add('-message', `${pokemon.name} is at maximum charge!`);
-			} else {
-				this.add('-anim', pokemon, 'Charge', pokemon);
-				this.add('-message', `${pokemon.name} is at ${(pokemon.m.gauges / 5) * 100}% battery!`);
-			}
-			let gained = 0;
-			if (pokemon.status === 'slp') gained++;
-			if (this.field.isTerrain('electricterrain')) gained++;
-			if (gained && pokemon.m.gauges < 5) {
-				this.add('-activate', pokemon, 'ability: Battery Life');
-				pokemon.m.gauges = Math.min(5, pokemon.m.gauges + gained);
-				this.add('-message',
-					gained === 1 ? `${pokemon.name} is charging up!` : `${pokemon.name} is charging rapidly!`
-				);
-			}
-		},
-	},
-	// Marisa Kirisame
-	ordinarymagician: {
-		desc: "This Pokemon is immune to status, and changes its typing to match the typing of the move it's using. On switch-in, user obtains either Assault Vest, Choice Specs, Expert Belt, Flame Orb, Light Ball, Razor Fang, or Toxic Orb. On switch-out, uses Fling.",
-		shortDesc: "Immune to status; Protean; Random item/fling on switch-in/out.",
-		onStart(pokemon) {
-			let i = this.random(7);
-			if (i === 0) {
-				pokemon.setItem('assaultvest');
-				this.add('-message', `${pokemon.name} obtained an Assault Vest!`);
-			} else if (i === 1) {
-				pokemon.setItem('choicespecs');
-				this.add('-message', `${pokemon.name} obtained Choice Specs!`);
-			} else if (i === 2) {
-				pokemon.setItem('expertbelt');
-				this.add('-message', `${pokemon.name} obtained an Expert Belt!`);
-			} else if (i === 3) {
-				pokemon.setItem('flameorb');
-				this.add('-message', `${pokemon.name} obtained a Flame Orb!`);
-			} else if (i === 4) {
-				pokemon.setItem('lightball');
-				this.add('-message', `${pokemon.name} obtained a Light Ball!`);
-			} else if (i === 5) {
-				pokemon.setItem('razorfang');
-				this.add('-message', `${pokemon.name} obtained a Razor Fang!`);
-			} else {
-				pokemon.setItem('toxicorb');
-				this.add('-message', `${pokemon.name} obtained a Toxic Orb!`);
-			}
-		},
-		onPrepareHit(source, target, move) {
-			if (move.hasBounced || move.flags['futuremove'] || move.sourceEffect === 'snatch') return;
-			const type = move.type;
-			if (type && type !== '???' && source.getTypes().join() !== type) {
-				if (!source.setType(type)) return;
-				this.add('-start', source, 'typechange', type, '[from] ability: Ordinary Magician');
-			}
-		},
-		onUpdate(pokemon) {
-			if (pokemon.status === 'brn' || pokemon.status === 'frz' || pokemon.status === 'par' || pokemon.status === 'psn' || pokemon.status === 'tox' || pokemon.status === 'slp') {
-				this.add('-activate', pokemon, 'ability: Ordinary Magician');
-				pokemon.cureStatus();
-			}
-		},
-		onSetStatus(status, target, source, effect) {
-			if (status.id !== 'brn' || status.id !== 'frz' || status.id !== 'par' || status.id !== 'psn' || status.id !== 'tox' || status.id !== 'slp') return;
-			if ((effect as Move)?.status) {
-				this.add('-immune', target, '[from] ability: Ordinary Magician');
-			}
-			return false;
-		},
-		onTryAddVolatile(status, target) {
-			if (status.id === 'yawn') {
-				this.add('-immune', target, '[from] ability: Ordinary Magician');
-				return null;
-			}
-		},
-		onSwitchOut(pokemon) {
-			this.actions.useMove('Fling', pokemon);
-		},
-		flags: { breakable: 1 },
-		name: "Ordinary Magician",
-		gen: 9,
-	},
-	// Sanae Kochiya
-	windpriestess: {
-		desc: "This Pokemon summons a random weather upon switching in and gains +1 Defense, Special Attack or Special Defense per turn.",
-		shortDesc: "Switch-in: Random weather. +1 Def, Spd, or Spe per turn.",
-		onStart(pokemon) {
-			const w = this.random(4);
-			if (w === 0) {
-				this.field.setWeather('sunnyday');
-				this.add('-message', `${pokemon.name}'s Wind Priestess summoned harsh sunlight!`);
-			} else if (w === 1) {
-				this.field.setWeather('raindance');
-				this.add('-message', `${pokemon.name}'s Wind Priestess summoned heavy rain!`);
-			} else if (w === 2) {
-				this.field.setWeather('snow');
-				this.add('-message', `${pokemon.name}'s Wind Priestess summoned a snowstorm!`);
-			} else {
-				this.field.setWeather('sandstorm');
-				this.add('-message', `${pokemon.name}'s Wind Priestess summoned a sandstorm!`);
-			}
-		},
-		onResidual(pokemon) {
-			if (pokemon.activeTurns) {
-				const s = this.random(3);
-				if (s === 0) {
-					this.boost({ spd: 1 });
-				} else if (s === 1) {
-					this.boost({ def: 1 });
-				} else {
-					this.boost({ spa: 1 });
-				}
-			}
-		},
-		flags: {},
-		name: "Wind Priestess",
-		gen: 9,
-	},
-	// Prince Smurf
-	quickcamo: {
-		shortDesc: "Changes type to resist move before hit + Protean. First move slot is STAB.",
-		desc: "This Pokemon changes type to match the type of the attack it is currently using, and changes type to resist incoming attacks. This Pokemon's first moveslot changes type to match the user's primary type.",
-		name: "Quick Camo",
-		onTryHit(target, source, move) {
-			if (target === source) return;
-			if (move.flags['futuremove']) return;
-			const possibleTypes = [];
-			const attackType = move.type;
-			for (const type of this.dex.types.names()) {
-				if (target.hasType(type)) continue;
-				const typeCheck = this.dex.types.get(type).damageTaken[attackType];
-				if (typeCheck === 2) {
-					possibleTypes.push(type);
-				}
-			}
-			if (!possibleTypes.length) return;
-			const randomType = this.sample(possibleTypes);
-			target.setType(randomType);
-			this.add('-start', target, 'typechange', randomType);
-		},
-		onPrepareHit(source, target, move) {
-			if (move.hasBounced || move.flags['futuremove'] || move.sourceEffect === 'snatch') return;
-			const type = move.type;
-			if (type && type !== '???' && source.getTypes().join() !== type) {
-				source.setType(type);
-				this.add('-start', source, 'typechange', type, '[from] ability: Quick Camo');
-			}
-		},
-		onModifyMove(move, pokemon, target) {
-			const types = pokemon.getTypes(true);
-			const noModifyType = [
-				'judgment', 'multiattack', 'naturalgift', 'revelationdance', 'technoblast', 'terrainpulse', 'weatherball',
-			];
-			if (noModifyType.includes(move.id)) return;
-			for (const [i, type] of types.entries()) {
-				if (!this.dex.types.isName(type)) continue;
-				if (pokemon.moveSlots[i] && move.id === pokemon.moveSlots[i].id) move.type = type;
-			}
-		},
-		flags: {},
-	},
-	// Kozuchi
-	scrapworker: {
-		desc: "1.1x Accuracy. Reduces damage from Physical Attacks by 75% and Special Attacks by 30%. Loses 25% for Physical and 10% for Special with each attack received.",
-		shortdesc: "1.1x ACC; +75% DEF/+30% SPD. -33% damage reduction when hit.",
-		onStart(pokemon) {
-			if (!pokemon.m.armor && !pokemon.m.usedArmor) {
-				this.add('-activate', pokemon, 'ability: Scrapworker');
-				pokemon.m.armor = 3;
-				pokemon.m.usedArmor = true;
-				this.add('-message', `${pokemon.name} equipped their armor from Scrapworker!`);
-			}
-		},
-		onSourceModifyDamage(damage, source, target, move) {
-			if (move.category === 'Physical') {
-				if (!target.m.armor) return;
-				if (target.m.armor === 3) return this.chainModify(0.25);
-				if (target.m.armor === 2) return this.chainModify(0.5);
-				if (target.m.armor === 1) return this.chainModify(0.75);
-			}
-			if (move.category === 'Special') {
-				if (!target.m.armor) return;
-				if (target.m.armor === 3) return this.chainModify(0.7);
-				if (target.m.armor === 2) return this.chainModify(0.8);
-				if (target.m.armor === 1) return this.chainModify(0.9);
-			}
-		},
-		onSourceModifyAccuracy(accuracy) {
-			if (typeof accuracy !== 'number') return;
-			this.debug('Scrapworker - enhancing accuracy');
-			return accuracy * 1.1;
-		},
-		onDamagingHit(damage, source, target, move) {
-			if (source.m.armor && source.m.armor > 0) {
-				source.m.armor -= 1;
-				if (source.m.armor > 0) this.add('-message', `${source.name}'s armor was chipped!`);
-				if (source.m.armor === 0) this.add('-message', `${source.name}'s armor broke!`);
-			}
-		},
-		onBasePower(basePower, pokemon, move) {
-			if (!pokemon.m.enhancement) return;
-			if (pokemon.m.enhancement === 1) return this.chainModify(1.3);
-			if (pokemon.m.enhancement === 2) return this.chainModify(1.82);
-			if (pokemon.m.enhancement === 3) return this.chainModify(2.73);
-		},
-	},
-	// Urabrask
-	praetorsgrasp: {
-		name: "Praetor's Grasp",
-		desc: "Opposing Pokemon that have been active for less than 2 turns are prevented from switching.",
-		shortDesc: "Opposing Pokemon that have been active for less than 2 turns cannot switch.",
-		gen: 9,
-		onFoeTrapPokemon(pokemon) {
-			if (!pokemon.activeTurns || pokemon.activeTurns < 2) pokemon.tryTrap(true);
-		},
-	},
-	nowuntilyoudie: {
-		name: "Now, Until You Die",
-	   gen: 9,
-		desc: "Upon attacking, the target's max HP is set to its current HP.",
-		shortDesc: "Attacks set max HP to current.",
-		onSourceDamagingHit(damage, target, source, move) {
-			target.maxhp = target.hp;
-		},
-	},
-	// Mima
-	vengefulspirit: {
-		desc: "This Pokemon's attacks hit before the target switches. This Pokemon's attacks knock off the target's held item.",
-		shortDesc: "Hits before target switches; Attacks knock off item.",
-		onBeforeTurn(pokemon) {
-			for (const side of this.sides) {
-				if (side.hasAlly(pokemon)) continue;
-				side.addSideCondition('vengefulspirit', pokemon);
-				const data = side.getSideConditionData('vengefulspirit');
-				if (!data.sources) {
-					data.sources = [];
-				}
-				data.sources.push(pokemon);
-			}
-		},
-		onTryHit(source, target) {
-			target.side.removeSideCondition('vengefulspirit');
-		},
-		onAfterMoveSecondarySelf(source, target, move) {
-			if (!move || !target || source.switchFlag === true) return;
-			if (target !== source && move.category !== 'Status') {
-				const item = target.takeItem(source);
-				if (item) this.add('-enditem', target, item.name, '[from] ability: Vengeful Spirit', '[of] ' + source);
-			}
-		},
-		condition: {
-			duration: 1,
-			onBeforeSwitchOut(pokemon) {
-				const move = this.queue.willMove(pokemon.foes()[0]);
-				const moveName = move && move.moveid ? move.moveid.toString() : "";
-				this.debug('Pursuit start');
-				let alreadyAdded = false;
-				pokemon.removeVolatile('destinybond');
-				for (const source of this.effectState.sources) {
-					if (!source.isAdjacent(pokemon) || !this.queue.cancelMove(source) || !source.hp) continue;
-					if (!alreadyAdded) {
-						this.add('-activate', pokemon.foes()[0], 'ability: Vengeful Spirit');
-						alreadyAdded = true;
-					}
-					if (source.canMegaEvo || source.canUltraBurst) {
-						for (const [actionIndex, action] of this.queue.entries()) {
-							if (action.pokemon === source && action.choice === 'megaEvo') {
-								this.actions.runMegaEvo(source);
-								this.queue.list.splice(actionIndex, 1);
-								break;
-							}
-						}
-					}
-					this.actions.runMove(moveName, source, source.getLocOf(pokemon));
-				}
-			},
-		},
-		flags: {},
-		name: "Vengeful Spirit",
-		gen: 9,
-	},
-	// Gizmo
-	headonbattery: {
-		name: "Head-On Battery",
-		desc: "Allows this Pokemon to use Charge up to three times. Deals (100HP*number of charges) damage to target after reaching three charges. Forces user to switch to a random ally. Increases Attack and Speed by 50% for each charge this Pokemon has.",
-		shortDesc: "User can Charge 3x. +50% ATK/SPE for each charge.",
-		onStart(pokemon) {
-			if (pokemon.m.recallActive && !pokemon.item) {
-				pokemon.setItem('inconspicuouscoin');
-				this.add('-item', pokemon, pokemon.getItem(), '[from] item: Inconspicuous Coin');
-				pokemon.m.recallActive = false;
-			}
-		},
-		onSwitchOut(pokemon) {
-			pokemon.m.firedUp = false;
-		},
-		onModifyMove(move, pokemon) {
-			const target = pokemon.side.foe.active[pokemon.side.foe.active.length - 1 - pokemon.position];
-			if (move.id === 'charge') {
-				if (!pokemon.m.charges) pokemon.m.charges = 0;
-				if (pokemon.m.charges > 3) return;
-				pokemon.m.charges += 1;
-				if (pokemon.m.charges > 3) {
-					this.add('-activate', pokemon, '[from] ability: Head-On Battery');
-					this.add('-message', `${pokemon.name} is overflowing with charge!`);
-					this.add(`-anim`, pokemon, "Thunderclap", pokemon);
-					this.add(`-anim`, pokemon, "Volt Tackle", target);
-					this.damage(100 * pokemon.m.charges, target, pokemon);
-					pokemon.m.charges = 0;
-					this.add('-message', `${pokemon.name} was launched away by the impact!`);
-					if (pokemon.hp && !pokemon.fainted) pokemon.forceSwitchFlag = true;
-					return false;
-				}
-			}
-		},
-		onModifyAtkPriority: 5,
-		onModifyAtk(atk, pokemon) {
-			if (!pokemon.m.charges) return;
-			this.debug('Charge boost');
-			return this.chainModify(1 + (0.5 * pokemon.m.charges));
-		},
-		onModifySpe(spe, pokemon) {
-			if (!pokemon.m.charges) return;
-			this.debug('Charge boost');
-			return this.chainModify(1 + (0.5 * pokemon.m.charges));
-		},
-		onModifyCritRatio(critRatio, source, target) {
-			if (source.m.firedUp) return critRatio + 2;
-		},
-		onModifyAccuracyPriority: -1,
-		onModifyAccuracy(accuracy, target, source, move) {
-			if (typeof accuracy !== 'number') return;
-			if (target.m.firedUp) {
-				return this.chainModify([3277, 4096]);
-			}
-		},
-		gen: 9,
-	},
-	// Aeri
-	woventogethercohereforever: {
-		name: "Woven Together, Cohere Forever",
-		gen: 9,
-		desc: "When using Blissful Breeze, this Pokémon absorbs the typing of the last move used by itself or its allies, dealing an additional instance of 80 BP damage based on the typing absorbed and applying Silken Drafts to the opposing side. The additional instance of damage lasts for three turns and only one may exist at a time. Using Blissful Breeze while this effect is active will refresh its duration. Silken Drafts increases the damage taken from moves of the absorbed typing by 40%. This effect lasts for five turns.",
-		shortDesc: "See '/ssb Aeri' for more!",
-		onBeforeMovePriority: 9,
-		onBeforeMove(pokemon) {
-			if (!pokemon.side.lastMoveUsed) return;
-			this.effectState.lastMoveType = pokemon.side.lastMoveUsed.type;
-		},
-		onAfterMoveSecondarySelf(source, target, move) {
-			if (move.id === 'blissfulbreeze') {
-				const breezeActive = target.side.sideConditions['woventogethercohereforever']
-				const draftsActive = source.side.sideConditions['silkendrafts']
-
-				// If breeze is already active, simply reset duration. If it's not active,
-				// set the this.effectState.type value and start the condition.
-				if (breezeActive) {
-					target.side.sideConditions['woventogethercohereforever'].duration = 3;
-				} else {
-					target.side.addSideCondition('woventogethercohereforever');
-					if (this.effectState.lastMoveType) {
-						target.side.sideConditions['woventogethercohereforever'].type = this.effectState.lastMoveType;
-					} else {
-						target.side.sideConditions['woventogethercohereforever'].type = 'Flying';
-					}
-				}
-
-				// Repeat for Silken Drafts, as its duration is 5 instead of 3
-				if (draftsActive) {
-					source.side.sideConditions['silkendrafts'].duration = 5;
-				} else {
-					source.side.addSideCondition('silkendrafts');
-					if (this.effectState.lastMoveType) {
-						source.side.imprintType = this.effectState.lastMoveType;
-					} else {
-						source.side.imprintType = 'Flying';
-					}
-				}	
-			}
-		},
-		condition: {
-			duration: 3,
-			onResidual(pokemon) {
-				let source; let possibleSources = pokemon.side.foe.pokemon.filter(ally => ally.ability === 'woventogethercohereforever');
-				if (possibleSources.length) source = possibleSources[0];
-				if (!possibleSources.length) source = pokemon.side.foe.active[0];
-				let move = this.dex.getActiveMove('blissfulbreeze');
-				move.type = this.effectState.type;
-				this.add('-anim', pokemon, 'Geomancy', pokemon);
-				// @ts-ignore
-				const damage = this.actions.getDamage(source, pokemon, move);
-				this.damage(damage * 1.4, pokemon, source, this.dex.conditions.get('Woven Together, Cohere Forever'));
-			},
-		},
-	},
-	// Finger
-	absolutezen: {
-		name: "Absolute Zen",
-		desc: "This Pokemon cannot be taunted, confused, or infatuated, and at the end of every turn, restores HP equal to 1/5 of the total damage dealt to this Pokemon this turn.",
-		shortDesc: "Immune to Taunt/Confuse/Attract; Heals 1/4 damage taken.",
-		gen: 9,
-		// Damage Recovery
-		onDamagePriority: 1,
-		onDamage(damage, target, source, effect) {
-			if (!target.m.damageThisTurn) target.m.damageThisTurn = 0;
-			target.m.damageThisTurn += damage;
-		},
-		onResidual(pokemon) {
-			if (!pokemon.m.damageThisTurn) return;
-			if (pokemon.m.damageThisTurn > 0) {
-				this.heal(pokemon.m.damageThisTurn / 4, pokemon, pokemon, this.effect);
-				pokemon.m.damageThisTurn = 0;
-			}
-		},
-		onUpdate(pokemon) {
-			// Infatuation Immunity
-			if (pokemon.volatiles['attract']) {
-				this.add('-activate', pokemon, 'ability: Absolute Zen');
-				pokemon.removeVolatile('attract');
-				this.add('-end', pokemon, 'move: Attract', '[from] ability: Absolute Zen');
-			}
-			// Taunt Immunity
-			if (pokemon.volatiles['taunt']) {
-				this.add('-activate', pokemon, 'ability: Absolute Zen');
-				pokemon.removeVolatile('taunt');
-			}
-			// Confusion Immunity
-			if (pokemon.volatiles['confusion']) {
-				this.add('-activate', pokemon, 'ability: Absolute Zen');
-				pokemon.removeVolatile('confusion');
-			}
-		},
-		onTryAddVolatile(status, pokemon) {
-			if (status.id === 'confusion') return null;
-		},
-		onTryHit(pokemon, target, move) {
-			if (move.id === 'attract' || move.id === 'captivate' || move.id === 'taunt' || move?.volatileStatus === 'confusion') {
-				this.add('-immune', pokemon, '[from] ability: Absolute Zen');
-				return null;
-			}
-		},
-	},
-	// Pablo
-	artistblock: {
-		name: 'Artist Block',
-		gen: 9,
-		desc: "Whenever this Pokemon has a stat lowered, its Attack, Special Attack, and Speed increase by 2 stages. This Pokemon cannot be taunted. This Pokemon usually goes first when using Sketch.",
-		shortDesc: "Stat(s) lowered: +2 Atk/Spa/Spe; Cannot be taunted; Sketch: +1 Priority.",
-		onAfterEachBoost(boost, target, source, effect) {
-			if (!source || target.isAlly(source)) {
-				return;
-			}
-			let statsLowered = false;
-			let i: BoostID;
-			for (i in boost) {
-				if (boost[i]! < 0) {
-					statsLowered = true;
-				}
-			}
-			if (statsLowered) {
-				this.boost({ atk: 2 }, target, target, null, false, true);
-				this.boost({ spa: 2 }, target, target, null, false, true);
-				this.boost({ spe: 2 }, target, target, null, false, true);
-			}
-		},
-		onUpdate(pokemon) {
-			if (pokemon.volatiles['taunt']) {
-				this.add('-activate', pokemon, 'ability: Artist Block');
-				pokemon.removeVolatile('taunt');
-			}
-		},
-		onTryHit(pokemon, target, move) {
-			if (move.id === 'taunt') {
-				this.add('-immune', pokemon, '[from] ability: Artist Block');
-				return null;
-			}
-		},
-		onModifyPriority(priority, pokemon, target, move) {
-			if (move.id === 'sketch') return priority + 1;
-		},
-	},
-	// Trey
-	concentration: {
-		desc: "Starts Dynamite Arrow on the opposing side upon switching in. This Pokemon has x1.3 speed. This Pokemon's attacks cannot miss. This Pokemon's attacks have 1.5x power and +2 crit ratio after one full turn of not being attacked.",
-		shortDesc: "See '/ssb Trey' for more!",
-		onStart(pokemon) {
-			const target = pokemon.side.foe.active[pokemon.side.foe.active.length - 1 - pokemon.position];
-			target.side.addSideCondition('dynamitearrow');
-			this.add('-anim', pokemon, 'Ember', pokemon);
-			this.add('-message', `${pokemon.name} is preparing Dynamite Arrow!`);
-			this.add('-message', `${pokemon.name} is building concentration!`);
-			pokemon.m.damaged = false;
-			pokemon.m.concentrated = true;
-		},
-		onDamagingHit(damage, target, source, move) {
-			if (!target.m.damaged && target.m.concentrated) {
-				target.m.damaged = true;
-				target.m.concentrated = false;
-				this.add('-message', `${target.name} lost their concentration!`);
-			}
-		},
-		onSourceModifyAccuracyPriority: -1,
-		onSourceModifyAccuracy(accuracy) {
-			if (typeof accuracy !== 'number') return;
-			this.debug('concentration - user will not miss');
-			return true;
-		},
-		onResidual(pokemon, target) {
-			if (!pokemon.m.damaged && !pokemon.m.concentrated) {
-				pokemon.m.concentrated = true;
-				this.add('-anim', pokemon, 'Focus Energy', pokemon);
-				this.add('-message', `${pokemon.name} is building concentration!`);
-				return;
-			}
-			pokemon.m.damaged = false;
-		},
-		onBasePowerPriority: 29,
-		onBasePower(basePower, pokemon, target, move) {
-			if (pokemon.m.concentrated) {
-				this.debug(`concentration bp boost, concentration disabled`);
-				pokemon.m.concentrated = false;
-				return move.basePower * 1.5;
-			}
-			return move.basePower;
-		},
-		onModifyCritRatio(critRatio, pokemon, target, move) {
-			if (pokemon.m.concentrated) {
-				return move.critRatio + 2;
-			}
-			return move.critRatio;
-		},
-		flags: {},
-		name: "Concentration",
-		gen: 9,
 	},
 };
