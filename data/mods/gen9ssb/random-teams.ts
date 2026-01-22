@@ -581,7 +581,7 @@ export const ssbSets: SSBSets = {
 		item: 'Zhuyou',
 		gender: 'M',
 		moves: [
-			'Triple Kick',
+			'Force Palm',
 			'Circle Throw',
 			'Taiji'
 		],
