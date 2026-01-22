@@ -291,10 +291,10 @@ export const ssbSets: SSBSets = {
 			'Overheat',
 			'Freezy Frost'
 		],
-		signatureMove: 'Orb Shield',
-		evs: { hp: 248, def: 8, spa: 252 },
-		ivs: { atk: 0, spe: 0 },
-		nature: 'Quiet',
+		signatureMove: 'Master Spark',
+		evs: { spa: 252, spd: 4, spe: 252 },
+		ivs: { atk: 0 },
+		nature: 'Timid',
 	},
 
 	Marvin: {
@@ -356,6 +356,22 @@ export const ssbSets: SSBSets = {
 		evs: { spa: 252, spd: 4, spe: 252 },
 		ivs: { atk: 0 },
 		nature: 'Timid',
+	},
+
+	'Noelle Holiday': {
+		species: 'Deerling',
+		ability: 'LOVE',
+		item: 'Leftovers',
+		gender: 'F',
+		moves: [
+			'No Retreat',
+			'Aurora Veil',
+			'Blizzard'
+		],
+		signatureMove: 'Snowgrave',
+		evs: { hp: 4, spa: 252, spe: 252 },
+		nature: 'Timid',
+		shiny: true,
 	},
 
 	Pablo: {
