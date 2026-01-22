@@ -358,6 +358,22 @@ export const ssbSets: SSBSets = {
 		nature: 'Timid',
 	},
 
+	'Noelle Holiday': {
+		species: 'Deerling',
+		ability: 'LOVE',
+		item: 'Leftovers',
+		gender: 'F',
+		moves: [
+			'No Retreat',
+			'Aurora Veil',
+			'Blizzard'
+		],
+		signatureMove: 'Snowgrave',
+		evs: { hp: 4, spa: 252, spe: 252 },
+		nature: 'Timid',
+		shiny: true,
+	},
+
 	Pablo: {
 		species: 'Smeargle',
 		ability: 'Artist Block',
@@ -687,22 +703,6 @@ export const ssbSets: SSBSets = {
 		signatureMove: 'Pink Rocks',
 		evs: { hp: 248, atk: 8, def: 252 },
 		nature: 'Impish',
-		shiny: true,
-	},
-
-	'Noelle Holiday': {
-		species: 'Deerling',
-		ability: 'LOVE',
-		item: 'Leftovers',
-		gender: 'F',
-		moves: [
-			'No Retreat',
-			'Aurora Veil',
-			'Blizzard'
-		],
-		signatureMove: 'Snowgrave',
-		evs: { hp: 4, spa: 252, spe: 252 },
-		nature: 'Timid',
 		shiny: true,
 	},
 
