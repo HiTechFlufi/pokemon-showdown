@@ -1451,7 +1451,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 		name: "The World",
 		gen: 9,
 		onFoeTryMove(target, source, move) {
-			if (move.category === 'Status' || move.flags['futuremove']) return;
+			if (move.isZ || move.isMax || move.category === 'Status' || move.flags['futuremove']) return;
 			if (!source.side.addSlotCondition(source, 'futuremove')) return;
 			Object.assign(source.side.slotConditions[source.position]['futuremove'], {
 				duration: 2,
