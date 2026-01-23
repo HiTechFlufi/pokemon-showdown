@@ -970,7 +970,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 		desc: "This Pokemon is immune to status, and changes its typing to match the typing of the move it's using. On switch-in, user obtains either Assault Vest, Choice Specs, Expert Belt, Flame Orb, Light Ball, Razor Fang, or Toxic Orb. On switch-out, uses Fling.",
 		shortDesc: "Immune to status; Protean; Random item/fling on switch-in/out.",
 		onStart(pokemon) {
-			let i = this.random(6);
+			let i = this.random(5);
 			if (i === 0) {
 				pokemon.setItem('choicespecs');
 				this.add('-message', `${pokemon.name} obtained Choice Specs!`);
@@ -983,9 +983,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			} else if (i === 3) {
 				pokemon.setItem('lightball');
 				this.add('-message', `${pokemon.name} obtained Light Ball!`);
-			} else if (i === 4) {
-				pokemon.setItem('razorfang');
-				this.add('-message', `${pokemon.name} obtained Razor Fang!`);
 			} else {
 				pokemon.setItem('toxicorb');
 				this.add('-message', `${pokemon.name} obtained Toxic Orb!`);
@@ -1450,15 +1447,8 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	theworld: {
 		name: "The World",
 		gen: 9,
-		onSwitchIn(pokemon) {
-			if (!this.field.pseudoWeather['trickroom']) {
-				this.field.addPseudoWeather('trickroom');
-			} else {
-				this.field.removePseudoWeather('trickroom');
-			}
-		},
 		onFoeTryMove(target, source, move) {
-			if (move.category === 'Status' || move.flags['futuremove']) return;
+			if (move.isZ || move.isMax || move.category === 'Status' || move.flags['futuremove']) return;
 			if (!source.side.addSlotCondition(source, 'futuremove')) return;
 			Object.assign(source.side.slotConditions[source.position]['futuremove'], {
 				duration: 2,
@@ -1625,13 +1615,14 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	},
 	// Suika Ibuki
 	densitymanipulation: {
-		desc: "This Pokemon sets a Substitute and loses 33% of their max HP upon switching in.",
-		shortDesc: "Switch-in: -33% HP, sets Substitute.",
+		desc: "This Pokemon sets a 1 HP substitute that lasts for one turn and loses 1/3 of its max HP upon switching in.",
+		shortDesc: "1-turn sub on switch-in.",
 		onSwitchIn(pokemon) {
 			if (pokemon.hp > pokemon.maxhp / 3) {
 				this.add('-activate', pokemon, 'Density Manipulation');
 				pokemon.addVolatile('substitute');
 				pokemon.volatiles['substitute'].hp = 1;
+				pokemon.volatiles['substitute'].duration = 1;
 				this.directDamage(pokemon.maxhp / 3, pokemon);
 			}
 		},

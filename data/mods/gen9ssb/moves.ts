@@ -46,8 +46,9 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 100,
 		basePower: 80,
 		category: "Special",
-		name: "Blissful Breeze",
 		shortDesc: "Cures the party of status ailments.",
+		desc: "The user and its allies are cured of status ailments.",
+		name: "Blissful Breeze",
 		gen: 9,
 		pp: 10,
 		priority: 0,
@@ -76,16 +77,13 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 100,
 		basePower: 60,
 		category: "Special",
-		name: "Genesis Ray",
-		desc: "After hitting, encases the target for 2 turns (cannot stack). If the encased Pokemon uses a contact move or switches out, Genesis Ray triggers for a second hit at double the original damage, then ends.",
 		shortDesc: "Encases target; contact or switching triggers 2x damage hit.",
+		desc: "After hitting, encases the target for 2 turns (cannot stack). If the encased Pokemon uses a contact move or switches out, Genesis Ray triggers for a second hit at double the original damage, then ends.",
+		name: "Genesis Ray",
 		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { protect: 1, mirror: 1 },
-		type: "Steel",
-		target: "normal",
-		secondary: null,
 		volatileStatus: 'genesisray',
 		onTryMove() {
 			this.attrLastMove('[still]');
@@ -160,15 +158,19 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				pokemon.removeVolatile('genesisray');
 			},
 		},
+		secondary: null,
+		target: "normal",
+		type: "Steel",
 	},
 	// Aevum
 	temporalterrain: {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		name: "Temporal Terrain",
-		desc: "Traps all Pokemon. Forces all Pokemon to switch upon ending. Roar of Time immediately ends the terrain.",
 		shortDesc: "Traps; forces all to switch on-end. Roar of Time ends it early.",
+		desc: "Traps all Pokemon. Forces all Pokemon to switch upon ending. Roar of Time immediately ends the terrain.",
+		name: "Temporal Terrain",
+		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { nonsky: 1, metronome: 1 },
@@ -224,19 +226,17 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// Cyclommatic Cell
 	parabolicdischarge: {
-		name: "Parabolic Discharge",
-		category: "Special",
-		gen: 9,
-		desc: "Fails unless Electric Terrain is active. After dealing damage, Electric Terrain ends. Drains the user's Battery Life to 0 and changes its ability to Electromorphosis.",
-		shortDesc: "Only in Electric Terrain. Ends Terrain. Gauges -> 0. Becomes Electromorphosis.",
-		basePower: 150,
 		accuracy: true,
+		basePower: 150,
+		category: "Special",
+		shortDesc: "Only in Electric Terrain. Ends Terrain. Gauges -> 0. Becomes Electromorphosis.",
+		desc: "Fails unless Electric Terrain is active. After dealing damage, Electric Terrain ends. Drains the user's Battery Life to 0 and changes its ability to Electromorphosis.",
+		name: "Parabolic Discharge",
+		gen: 9,
 		pp: 5,
 		priority: 0,
-		ignoreAbility: true,
 		flags: { protect: 1, mirror: 1 },
-		type: "Electric",
-		target: "normal",
+		ignoreAbility: true,
 		onTry(source, target, move) {
 			const field: any = this.field;
 			const isET = (field.isTerrain && field.isTerrain('electricterrain')) || field.terrain === 'electricterrain';
@@ -273,19 +273,30 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				this.add('-anim', source, 'Charge', source);
 			}
 		},
+		secondary: null,
+		target: "normal",
+		type: "Electric",
 	},
 	// Emerl
 	awakenedmode: {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		desc: "User fully restores HP and status conditions, starts Ingrain, and raises all stats by 1 stage (except acc/eva). User's item is replaced with Leftovers. This move is replaced with Gigaton Hammer. If this Pokemon learns U-turn, it is replaced with Bug Buzz.",
 		shortDesc: "100% HP; Ingrain; +1 Stats; Leftovers/Gigaton Hammer/Bug Buzz.",
+		desc: "User fully restores HP and status conditions, starts Ingrain, and raises all stats by 1 stage (except acc/eva). User's item is replaced with Leftovers. This move is replaced with Gigaton Hammer. If this Pokemon learns U-turn, it is replaced with Bug Buzz.",
 		name: "Awakened Mode",
 		pp: 1,
 		noPPBoosts: true,
 		priority: 0,
 		flags: { heal: 1, defrost: 1 },
+		volatileStatus: 'ingrain',
+		boosts: {
+			atk: 1,
+			def: 1,
+			spa: 1,
+			spd: 1,
+			spe: 1,
+		},
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -321,14 +332,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			pokemon.moveSlots[AMIndex] = GTF;
 			pokemon.moveSlots[UTIndex] = BBF;
 		},
-		volatileStatus: 'ingrain',
-		boosts: {
-			atk: 1,
-			def: 1,
-			spa: 1,
-			spd: 1,
-			spe: 1,
-		},
 		secondary: null,
 		target: "self",
 		type: "Steel",
@@ -343,9 +346,10 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 100,
 		basePower: 0,
 		category: "Status",
-		name: "Blow and Go",
-		desc: "Lowers target's Atk, Sp. Atk by 1, starts Aqua Ring on the target, changes the target's type to Water, then user switches to an ally of choice.",
 		shortDesc: "Parting Shot + Soak; Starts Aqua Ring on target.",
+		desc: "Lowers target's Atk, Sp. Atk by 1, starts Aqua Ring on the target, changes the target's type to Water, then user switches to an ally of choice.",
+		name: "Blow and Go",
+		gen: 9,
 		pp: 5,
 		priority: 1,
 		flags: { protect: 1, reflectable: 1, mirror: 1 },
@@ -371,11 +375,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		name: "Mega Metronome",
+		shortDesc: "2-5 random moves.",
 		desc: "Uses two-to-five randomly selected moves.",
+		name: "Mega Metronome",
+		gen: 9,
 		pp: 5,
 		priority: 0,
 		flags: { failencore: 1, nosleeptalk: 1, noassist: 1, failcopycat: 1, failmimic: 1, failinstruct: 1 },
+		multihit: [2, 5],
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -424,7 +431,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-activate', target, 'move: Mega Metronome', 'Fear the Finger');
 		},
 		secondary: null,
-		multihit: [2, 5],
 		target: "self",
 		type: "Normal",
 	},
@@ -433,11 +439,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
+		shortDesc: "Uses ten randomly selected moves. Ignores protect.",
+		desc: "Uses ten moves selected at random. Ignores protection.",
 		name: "Fear the Finger",
-		shortDesc: "Uses ten randomly selected moves. Breaks protection.",
+		gen: 9,
 		pp: 1,
 		noPPBoosts: true,
 		priority: 0,
+		flags: {},
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -478,22 +487,23 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			target.baseMoveSlots[ftfIndex] = mm;
 			this.add('-activate', target, 'move: Fear the Finger', 'Mega Metronome');
 		},
-		flags: {},
-		breaksProtect: true,
 		secondary: null,
 		target: "self",
 		type: "Dark",
 	},
 	// Flufi
 	cranberrycutter: {
-		name: "Cranberry Cutter",
+		accuracy: 90,
+		basePower: 100,
 		category: "Physical",
 		shortDesc: "Always results in a critical hit. Confuses the target.",
-		basePower: 100,
-		accuracy: 90,
+		desc: "Guaranteed to score a critical hit. 100% chance to confuse the target.",
+		name: "Cranberry Cutter",
+		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { contact: 1, protect: 1, mirror: 1 },
+		willCrit: true,
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -502,7 +512,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-anim', source, 'Psycho Cut', source);
 			this.add('-anim', source, 'Seismic Toss', target);
 		},
-		willCrit: true,
 		secondary: {
 			chance: 100,
 			volatileStatus: 'confusion',
@@ -512,14 +521,18 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// Flufi
 	ripapart: {
-		name: "Rip Apart",
-		category: "Physical",
-		basePower: 150,
 		accuracy: true,
-		shortDesc: "Supereffective against all types. User must recharge.",
+		basePower: 150,
+		category: "Physical",
+		shortDesc: "Supereffective against all types. User must recharge. Breaks protection.",
+		desc: "Deals super-effective damage to all types. Forces the user to recharge. Breaks protection.",
+		name: "Rip Apart",
+		gen: 9,
 		pp: 1,
-		isZ: "epipen",
 		priority: 0,
+		flags: { contact: 1, bypasssub: 1 },
+		isZ: "epipen",
+		breaksProtect: true,
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -531,11 +544,9 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		onEffectiveness(typeMod, target, type) {
 			return 1;
 		},
-		flags: { contact: 1, bypasssub: 1 },
 		self: {
 			volatileStatus: 'mustrecharge',
 		},
-		breaksProtect: true,
 		secondary: null,
 		target: "normal",
 		type: "Fighting",
@@ -545,11 +556,13 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 100,
 		basePower: 0,
 		category: "Physical",
-		name: "Capital Cannon",
-		desc: "+10 base power for each coin the user has collected through Cash Grab, up to 300 base power. Neutral effectiveness against all types.",
 		shortDesc: "+10 bp per coin, max 300; Neutral vs. all types.",
+		desc: "+10 base power for each coin the user has collected through Cash Grab, up to 300 base power. Neutral effectiveness against all types.",
+		name: "Capital Cannon",
+		gen: 9,
 		pp: 5,
-		flags: { protect: 1 },
+		priority: 0,
+		flags: { protect: 1, mirror: 1 },
 		onTryMove(pokemon, target, move) {
 			this.attrLastMove('[still]');
 			if (!pokemon.m.coins) {
@@ -592,12 +605,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 80,
 		basePower: 25,
 		category: "Physical",
-		name: "Coin Clash",
-		desc: "Hits 3-5 times. Flings coin at target after use. 50% chance to gain +2 crit ratio and 1.25x evasion until switch/faint. Fails if not holding Inconspicuous Coin.",
 		shortDesc: "Hits 3-5(+1) times. 50%: +2 Crit/1.25x EVA. -Inconspicuous Coin: Fails.",
+		desc: "Hits 3-5 times. Flings coin at target after use. 50% chance to gain +2 crit ratio and 1.25x evasion until switch/faint. Fails if not holding Inconspicuous Coin.",
+		name: "Coin Clash",
+		gen: 9,
 		pp: 5,
 		priority: 0,
 		flags: { contact: 1 },
+		multihit: [3, 5],
 		onTryMove(pokemon, target, move) {
 			this.attrLastMove('[still]');
 			if (!pokemon.item) {
@@ -640,20 +655,19 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				pokemon.m.recallActive = false;
 			},
 		},
-		multihit: [3, 5],
 		secondary: null,
 		target: "normal",
 		type: "Steel",
 	},
 	// Hooked Doll
 	retribution: {
-		name: "Retribution",
-		category: "Physical",
-		gen: 9,
-		desc: "Damages then switches. If opponent has 'Vindictive', heals 50% of damage dealt.",
-		shortDesc: "Switch-out. 50% healing if foe = vindictive.",
-		basePower: 60,
 		accuracy: 100,
+		basePower: 60,
+		category: "Physical",
+		shortDesc: "Switch-out. 50% healing if foe = vindictive.",
+		desc: "Damages then switches. If opponent has 'Vindictive', heals 50% of damage dealt.",
+		name: "Retribution",
+		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { contact: 1, protect: 1, mirror: 1 },
@@ -674,22 +688,23 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				move.drain = [1, 2];
 			}
 		},
-		type: "Ghost",
+		secondary: null,
 		target: 'normal',
+		type: "Ghost",
 	},
-	// Karumonix Rat King
+	// Karumonix
 	calloftherat: {
-		name: "CALL OF THE RAT",
-		category: "Status",
-		gen: 9,
-		basePower: 0,
 		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		shortDesc: "Becomes Rat Servant. Usable once per switch-in.",
+		desc: "This Pokemon turns into a Rat Servant (Rattata-Alola). When it faints, Karumonix takes back its place. Can only be used once per switch in.",
+		name: "CALL OF THE RAT",
+		gen: 9,
 		pp: 3,
 		noPPBoosts: true,
 		priority: 0,
 		flags: {},
-		target: "self",
-		type: "Normal",
 		volatileStatus: 'calloftheratlock',
 		condition: {
 			// purely a usage lock; cleared automatically on switch
@@ -727,6 +742,9 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			for (const ms of source.moveSlots) ms.pp = ms.maxpp;
 			source.heal(source.maxhp);
 		},
+		secondary: null,
+		target: "self",
+		type: "Normal",
 	},
 	// Stuff just to clear Plagued from Karmonix
 	healbell: {
@@ -769,7 +787,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	healingwish: {
 		inherit: true,
-		slotCondition: 'healingwish',
 		condition: {
 			onSwitchIn(pokemon) {
 				if (!pokemon.fainted) {
@@ -785,17 +802,16 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// Koiru
 	coilconnection: {
-		name: "Coil Connection",
-		gen: 9,
-		category: "Status",
-		type: "Electric",
-		pp: 40,
-		priority: 5,
 		accuracy: true,
-		flags: { snatch: 1, cantusetwice: 1 },
-		target: "self",
+		basePower: 0,
+		category: "Status",
 		shortDesc: "Protects; contact burns. Swaps Coil Mode and resets Grade to D.",
 		desc: "Protects from attacking moves; contact burns. Swaps Coil Mode in order (Gravity -> Speed -> Regeneration -> Gravity). Resets Grade to D when swapping modes.",
+		name: "Coil Connection",
+		gen: 9,
+		pp: 40,
+		priority: 5,
+		flags: { snatch: 1, cantusetwice: 1 },
 		volatileStatus: 'coilconnection',
 		onTryMove(target, source) {
 			// If in Fusion, this button becomes Hellhound Strike instead.
@@ -824,21 +840,27 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 
 			this.add('-message', `${source.name} switched to ${next.toUpperCase()} Mode! (Grade D)`);
 		},
+		secondary: null,
+		target: "self",
+		type: "Electric",
 	},
 	// Koiru
 	frostbitefusion: {
-		name: "Frostbite Fusion",
-		gen: 9,
-		category: "Physical",
-		type: "Fighting",
+		accuracy: true,
 		basePower: 160,
-		accuracy: 100,
-		pp: 1,
-		priority: 0,
-		isZ: "fusioncoils",
-		flags: {},
+		category: "Physical",
 		shortDesc: "160 BP. Combines Ice/Fighting effectiveness. Enters Coil Fusion (3 turns).",
 		desc: "Deals damage. Effectiveness uses the better of Fighting or Ice. Then enters Coil Fusion for 3 turns: becomes Electric/Fighting, locked at B Grade, all modes at once, Coil Connection becomes Hellhound Strike.",
+		name: "Frostbite Fusion",
+		gen: 9,
+		pp: 1,
+		priority: 0,
+		category: "Physical",
+		flags: {},
+		isZ: "fusioncoils",
+		onTryMove() {
+			this.attrLastMove('[still]');
+		},
 		onPrepareHit(target, source) {
 			this.add('-anim', source, 'Collision Course', target);
 		},
@@ -852,27 +874,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		onHit(target, source) {
 			source.addVolatile('coilfusion');
 		},
+		secondary: null,
 		target: "normal",
+		type: "Fighting",
 	},
 	// Koiru
 	hellhoundstrike: {
-		name: "Hellhound Strike",
-		gen: 9,
-		category: "Physical",
-		type: "Fighting",
-		pp: 5,
 		accuracy: 100,
-		priority: 0,
-		flags: { protect: 1, contact: 1 },
-		target: "normal",
-		shortDesc: "BP scales by Speed ratio (user/target).",
-		desc: "BP scales by Speed ratio (user/target): 150 (>=4), 120 (>=3), 90 (>=2), 60 (>=1), 40 (<1).",
-		onTryMove() {
-			this.attrLastMove('[still]');
-		},
-		onPrepareHit(target, source) {
-			this.add('-anim', source, 'Meteor Assault', target);
-		},
+		basePower: 0,
 		basePowerCallback(pokemon, target) {
 			const s = pokemon.getStat('spe', false, true);
 			const t = target.getStat('spe', false, true);
@@ -883,46 +892,33 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			if (ratio >= 1) return 60;
 			return 40;
 		},
-	},
-	// Kozuchi
-	emergencyupgrades: {
-		name: "Emergency Upgrades",
-		category: "Status",
-		basePower: 0,
-		accuracy: true,
-		pp: 1,
+		category: "Physical",
+		shortDesc: "BP scales by Speed ratio (user/target).",
+		desc: "BP scales by Speed ratio (user/target): 150 (>=4), 120 (>=3), 90 (>=2), 60 (>=1), 40 (<1).",
+		name: "Hellhound Strike",
+		gen: 9,
+		pp: 5,
 		priority: 0,
-		flags: {},
+		flags: { protect: 1, contact: 1 },
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
 		onPrepareHit(target, source) {
-			this.add('-anim', source, 'Rock Polish', source);
-			this.add('-anim', source, 'Swords Dance', source);
+			this.add('-anim', source, 'Meteor Assault', target);
 		},
-		volatileStatus: 'emergencyupgrades',
-		condition: {
-			duration: 5,
-			onStart(pokemon) {
-				this.add('-message', `${pokemon.name} made emergency upgrades!`);
-			},
-			onResidual(pokemon) {
-				if (this.effectState.duration === 2) this.add('-message', `${pokemon.name}'s emergency upgrades wore off!`);
-			},
-			onBasePower(basePower, pokemon, target) {
-				if (this.effectState.duration >= 3) return this.chainModify(2);
-			},
-		},
-		isZ: "forgedhammer",
-		target: "self",
-		type: "Steel",
+		secondary: null,
+		target: "normal",
+		type: "Fighting",
 	},
 	// Kozuchi
 	weaponenhancement: {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
+		shortDesc: "Multiplies damage by 1.5x per use.",
+		desc: "1.5x, 2.25x, 3.375x damage.",
 		name: "Weapon Enhancement",
+		gen: 9,
 		pp: 4,
 		noPPBoosts: true,
 		priority: 0,
@@ -949,62 +945,56 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		target: "self",
 		type: "Steel",
 	},
-	// Luminous
-	polaris: {
+	// Kozuchi
+	emergencyupgrades: {
 		accuracy: true,
-		basePower: 170,
-		category: "Special",
-		name: "Polaris",
+		basePower: 0,
+		category: "Status",
+		shortDesc: "2x damage for 2 turns.",
+		desc: "This Pokemon's moves deal double damage for two turns.",
+		name: "Emergency Upgrades",
+		gen: 9,
 		pp: 1,
-		isZ: "spectralprism",
 		priority: 0,
-		flags: { protect: 1, bypasssub: 1 },
-		status: 'brn',
-		target: "normal",
-		type: "Light",
+		flags: {},
+		isZ: "forgedhammer",
+		volatileStatus: 'emergencyupgrades',
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
 		onPrepareHit(target, source) {
-			this.add('-anim', source, 'Light That Burns the Sky', target);
-			this.add('-anim', source, 'Flash', target);
+			this.add('-anim', source, 'Rock Polish', source);
+			this.add('-anim', source, 'Swords Dance', source);
 		},
-		onAfterMove(pokemon, target, move) {
-			if (pokemon.species.id === 'necrozma') changeSet(this, pokemon, ssbSets['Luminous-N'], true);
-			pokemon.setAbility('blindinglight');
-			this.add('-anim', pokemon, 'Flash', pokemon);
-			for (const targetPokemon of this.getAllActive()) {
-				if (pokemon === targetPokemon) continue;
-				targetPokemon.addVolatile('blindinglight');
-			}
+		condition: {
+			duration: 5,
+			onStart(pokemon) {
+				this.add('-message', `${pokemon.name} made emergency upgrades!`);
+			},
+			onResidual(pokemon) {
+				if (this.effectState.duration === 2) this.add('-message', `${pokemon.name}'s emergency upgrades wore off!`);
+			},
+			onBasePower(basePower, pokemon, target) {
+				if (this.effectState.duration >= 3) return this.chainModify(2);
+			},
 		},
+		secondary: null,
+		target: "self",
+		type: "Steel",
 	},
 	// Luminous
 	rainbowmaxifier: {
 		accuracy: 85,
 		basePower: 80,
 		category: "Special",
-		name: "Rainbow Maxifier",
 		shortDesc: "Water: +Fire-type; Light-type if transformed. Starts Rainbow.",
 		desc: "If this move is Water-type, Fire-type is added to its type effectiveness. If used by Necrozma-Ultra, this move becomes Light-type instead. Starts a rainbow on the user's side upon hitting. 30% chance to burn. 30% chance to reduce the target's Attack and Special Attack by 1 stage.",
+		name: "Rainbow Maxifier",
+		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { protect: 1 , mirror: 1, heal: 1 },
 		drain: [1, 2],
-		secondaries: [
-			{
-				chance: 30,
-				status: 'brn',
-			}, {
-				chance: 30,
-				boosts: {
-					atk: -1,
-					spa: -1,
-				},
-			},
-		],
-		target: "normal",
-		type: "Water",
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1025,15 +1015,64 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		onHit(target, source, move) {
 			source.side.addSideCondition('waterpledge');
 		},
+		secondaries: [
+			{
+				chance: 30,
+				status: 'brn',
+			}, {
+				chance: 30,
+				boosts: {
+					atk: -1,
+					spa: -1,
+				},
+			},
+		],
+		target: "normal",
+		type: "Water",
+	},
+	// Luminous
+	polaris: {
+		accuracy: true,
+		basePower: 170,
+		category: "Special",
+		shortDesc: "Light-type UN, LoR & RM; burns target.",
+		desc: "The user turns into Ultra Necrozma and becomes Light-type. Light of Ruin and Rainbow Maxifier become Light-type. Burns the target.",
+		name: "Polaris",
+		gen: 9,
+		pp: 1,
+		priority: 0,
+		flags: { protect: 1, bypasssub: 1 },
+		isZ: "spectralprism",
+		status: 'brn',
+		onTryMove() {
+			this.attrLastMove('[still]');
+		},
+		onPrepareHit(target, source) {
+			this.add('-anim', source, 'Light That Burns the Sky', target);
+			this.add('-anim', source, 'Flash', target);
+		},
+		onAfterMove(pokemon, target, move) {
+			if (pokemon.species.id === 'necrozma') changeSet(this, pokemon, ssbSets['Luminous-N'], true);
+			pokemon.setAbility('blindinglight');
+			this.add('-anim', pokemon, 'Flash', pokemon);
+			for (const targetPokemon of this.getAllActive()) {
+				if (pokemon === targetPokemon) continue;
+				targetPokemon.addVolatile('blindinglight');
+			}
+		},
+		secondary: null,
+		target: "normal",
+		type: "Light",
 	},
 	// Marisa Kirisame
 	masterspark: {
 		accuracy: true,
 		basePower: 80,
 		category: "Special",
-		desc: "This move is guaranteed to score a critical hit and ignores protection, substitutes and ability.",
 		shortDesc: "Critical; ignores protect, sub and ability.",
+		desc: "This move is guaranteed to score a critical hit and ignores protection, substitutes and ability.",
 		name: "Master Spark",
+		gen: 9,
 		pp: 5,
 		priority: 0,
 		flags: { mirror: 1, bypasssub: 1 },
@@ -1051,15 +1090,18 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// Marvin
 	emergencymeltdown: {
-		name: "Emergency Meltdown",
+		accuracy: true,
 		basePower: 0,
 		category: "Status",
 		shortDesc: "User faints. Target cannot move for 2 turns.",
 		desc: "User faints. Target cannot move or switch until after the end of next turn.",
-		accuracy: true,
+		name: "Emergency Meltdown",
 		gen: 9,
 		pp: 5,
+		priority: 0,
 		flags: { bypasssub: 1 },
+		selfdestruct: 'always',
+		volatileStatus: 'emergencymeltdown',
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1068,8 +1110,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-anim', source, 'V-create', source);
 			this.add('-anim', source, 'Explosion', source);
 		},
-		selfdestruct: 'always',
-		volatileStatus: 'emergencymeltdown',
 		condition: {
 			duration: 2,
 			onStart(pokemon) {
@@ -1092,18 +1132,18 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			},
 		},
 		secondary: null,
-		type: "Fire",
 		target: "normal",
+		type: "Fire",
 	},
 	// Mel
 	deepclaw: {
-		name: "Deep Claw",
+		accuracy: 100,
+		basePower: 100,
 		category: "Physical",
-		gen: 9,
 		shortDesc: "If target used healing move this or the last turn = 2x damage.",
 		desc: "Deals double damage if the target used a healing move this turn or last turn.",
-		basePower: 100,
-		accuracy: 100,
+		name: "Deep Claw",
+		gen: 9,
 		pp: 5,
 		priority: 0,
 		flags: { contact: 1, protect: 1, mirror: 1 },
@@ -1114,27 +1154,22 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-anim', source, 'Shadow Claw', target);
 			this.add('-anim', source, 'Crush Claw', target);
 		},
-		type: "Ghost",
-		target: "normal",
 		onBasePower(basePower, source, target, move) {
-		const lastMove = target.lastMove;
-		if (
-			lastMove &&
-			lastMove.category === 'Status' &&
-			lastMove.heal
-		) {
-			return this.chainModify(2);
-			}
+			const lastMove = target.lastMove;
+			if (lastMove && lastMove.category === 'Status' && lastMove.heal) return this.chainModify(2);
 		},
+		secondary: null,
+		target: "normal",
+		type: "Ghost",
 	},
 	// Morax
 	dominuslapidis: {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		name: "Dominus Lapidis",
 		shortDesc: "Summons Jade Shield. Always goes last.",
 		desc: "User focuses, then summons Jade Shield for 5 turns after the opponent moves.",
+		name: "Dominus Lapidis",
 		gen: 9,
 		pp: 5,
 		priority: -8,
@@ -1160,9 +1195,9 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		name: "Jade Shield",
 		shortDesc: "Summons Jade Shield. Always goes last.",
 		desc: "User focuses, then summons Jade Shield for 5 turns after the opponent moves.",
+		name: "Jade Shield",
 		gen: 9,
 		pp: 5,
 		priority: -8,
@@ -1247,12 +1282,15 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 250,
 		category: "Physical",
+		shortDesc: "Jade Shield & petrifies target.",
+		desc: "Summons Jade Shield and petrifies the target. A petrified target cannot move the turn it is inflicted and will have Rock-type added to its typing. It is cleared once it is hit or switched.",
 		name: "Planet Befall",
 		gen: 9,
 		pp: 1,
-		isZ: 'hadeansoil',
 		priority: 0,
 		flags: {},
+		isZ: 'hadeansoil',
+		volatileStatus: 'planetbefall',
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1260,7 +1298,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-anim', source, 'Draco Meteor', target);
 			this.add('-anim', source, 'Continental Crush', target);
 		},
-		volatileStatus: 'planetbefall',
 		onHit(target, source, move) {
 			const sourceSide = source.side;
 			sourceSide.addSideCondition('jadeshield');
@@ -1297,20 +1334,20 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 100,
 		basePower: 90,
 		category: "Special",
-		desc: "The target's positive stat changes are stolen and applied to the user before dealing damage.",
 		shortDesc: "Steals target's boosts before dealing damage.",
+		desc: "The target's positive stat changes are stolen and applied to the user before dealing damage.",
 		name: "Complete Darkness",
 		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { protect: 1, mirror: 1, bypasssub: 1 },
+		stealsBoosts: true,
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
 		onPrepareHit(target, source) {
 			this.add('-anim', source, 'Spectral Thief', target);
 		},
-		stealsBoosts: true,
 		secondary: null,
 		target: "normal",
 		type: "Dark",
@@ -1320,13 +1357,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		desc: "User fully restores HP and status condition and resets boosts before permanently transforming into foe.",
 		shortDesc: "Full restore & boost reset; transformation.",
+		desc: "User fully restores HP and status condition and resets boosts before permanently transforming into foe.",
 		name: "Reincarnation",
 		gen: 9,
 		pp: 1,
 		priority: 0,
 		flags: { defrost: 1 },
+		isZ: "crescentstaff",
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1340,7 +1378,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			changeSet(this, pokemon, ssbSets[target.name]);
 			this.heal(pokemon.baseMaxhp, pokemon, pokemon, move);
 		},
-		isZ: "crescentstaff",
 		secondary: null,
 		target: "normal",
 		type: "Ghost",
@@ -1357,6 +1394,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		pp: 40,
 		priority: 0,
 		flags: { protect: 1, mirror: 1 },
+		weather: 'snowscape',
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1370,7 +1408,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				ally.hp -= dmg;
 			}
 		},
-		weather: 'snowscape',
 		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Ice",
@@ -1380,12 +1417,19 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 100,
 		basePower: 0,
 		category: "Status",
+		shortDesc: "This move is replaced with target's last move which is then zeroed out.",
 		desc: "Replaces this move with target's last move. Lowers that move's PP to 0.",
 		name: "Plagiarize",
 		gen: 9,
 		pp: 10,
 		priority: 0,
-		// Plagiarize
+		flags: {},
+		onTryMove() {
+			this.attrLastMove('[still]');
+		},
+		onPrepareHit(target, source) {
+			this.add('-anim', source, 'Sketch', target);
+		},
 		onHit(target, source) {
 			const move = target.lastMove;
 			if (!move || source.moves.includes(move.id)) return false;
@@ -1416,23 +1460,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-activate', target, 'move: Plagiarize', move.name, ppDeducted, '[silent]');
 			this.add('-message', `${move.name}'s PP was nullified!`);
 		},
-		flags: {},
+		secondary: null,
 		target: "normal",
 		type: "Normal",
 	},
 	// Pablo
 	sketch: {
-		num: 166,
-		accuracy: true,
-		basePower: 0,
-		category: "Status",
-		name: "Sketch",
+		inherit: true,
 		pp: 10,
-		priority: 0,
-		flags: {
-			bypasssub: 1, allyanim: 1, failencore: 1, nosleeptalk: 1, noassist: 1,
-			failcopycat: 1, failmimic: 1, failinstruct: 1, nosketch: 1,
-		},
 		onHit(target, source, move) {
 			const lmove = target.lastMove;
 			source.addVolatile('sketch');
@@ -1478,30 +1513,28 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				return null;
 			},
 		},
-		secondary: null,
-		target: "normal",
-		type: "Normal",
-		zMove: { boost: { atk: 1, def: 1, spa: 1, spd: 1, spe: 1 } },
-		contestType: "Clever",
 	},
 	// Piercing Ox
 	blackbullet: {
 		accuracy: 90,
 		basePower: 0,
-		category: "Physical",
-		name: "Black Bullet",
-		pp: 5,
-		priority: 0,
-		flags: { contact: 1, protect: 1, mirror: 1, failinstruct: 1 },
-		onTryMove() {
-			this.attrLastMove('[still]');
-		},
 		basePowerCallback(pokemon, target) {
 			let ratio = Math.floor(pokemon.getStat('spe') / target.getStat('spe'));
 			if (!isFinite(ratio)) ratio = 0;
 			const bp = [40, 60, 80, 120, 150][Math.min(ratio, 4)];
 			this.debug(`Black Bullet BP: ${bp}`);
 			return bp;
+		},
+		category: "Physical",
+		shortDesc: "BP varies based on target's and user's Speed; choice lock.",
+		desc: "150, 120, 80, 60 or 40 BP depending on the difference between the target's and the user's Speed. The user is locked into using this move.",
+		name: "Black Bullet",
+		gen: 9,
+		pp: 5,
+		priority: 0,
+		flags: { contact: 1, protect: 1, mirror: 1, failinstruct: 1 },
+		onTryMove() {
+			this.attrLastMove('[still]');
 		},
 		self: {
 			volatileStatus: 'lockedmove',
@@ -1512,14 +1545,16 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// PokeKart
 	itembox: {
-		name: "Item Box",
+		accuracy: true,
 		basePower: 0,
 		category: "Physical",
-		accuracy: true,
+		shortDesc: "Random effect.",
+		desc: "Blooper is 80 BP and lowers the target's Accuracy by six stages. POW Block is 80 BP and causes the target to flinch and lose its item. Lightning is 100 BP and halves the max HP of foes for three turns. Spiny Shell is 120 BP and hits after one turn, dealing damage to a foe with the highest HP. Triple Green Shell is 40 BP and hits thrice, with each hit having a 1/10 chance to backfire. Triple Red Shell is 40 BP and hits thrice, with each hit having a 1/3 chance to lower the target's Speed by one stage. Triple Banana is 1 BP and hits thrice, with each hit having a 1/3 chance to force the target to recharge for two turns. Triple Mushroom is 20 BP and hits thrice, with each hit raising the user's Speed by one stage, lowering the user's Speed by two stages afterward. Mega Mushroom is 100 BP, doubles the user's maximum HP and applies Quash for three turns. Star is 120 BP, makes the user invincible for three turns and always goes first, lowering the user's Speed by three stages afterward. Bullet Bill is 120 BP, makes the user invincible for three turns, always goes first and forces the target to switch to a random ally, lowering the user's Speed by three stages afterward.",
+		name: "Item Box",
 		gen: 9,
 		pp: 40,
-		flags: { protect: 1, failmefirst: 1, nosleeptalk: 1, noassist: 1, failcopycat: 1, failinstruct: 1 },
 		priority: 0,
+		flags: { protect: 1, failmefirst: 1, nosleeptalk: 1, noassist: 1, failcopycat: 1, failinstruct: 1 },
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1650,18 +1685,18 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			}
 		},
 		secondary: null,
-		type: "Steel",
 		target: 'normal',
+		type: "Steel",
 	},
 	bulletbill: {
-		name: "Bullet Bill",
+		accuracy: true,
 		basePower: 120,
 		category: "Physical",
-		accuracy: 100,
+		name: "Bullet Bill",
 		gen: 9,
 		pp: 10,
+		priority: 3,
 		flags: { contact: 1, protect: 1 },
-		priority: 4,
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1716,18 +1751,18 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			},
 		},
 		secondary: null,
-		type: "Steel",
 		target: "normal",
+		type: "Steel",
 	},
 	star: {
-		name: "Star",
+		accuracy: true,
 		basePower: 120,
 		category: "Physical",
-		accuracy: 100,
+		name: "Star",
 		gen: 9,
 		pp: 10,
+		priority: 3,
 		flags: { contact: 1, protect: 1 },
-		priority: 2,
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1784,23 +1819,23 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			},
 		},
 		secondary: null,
-		type: "Steel",
 		target: "normal",
+		type: "Steel",
 	},
 	// Item Box integration only; not a real move
 	blueshell: {
-		name: "Blue Shell",
+		accuracy: true,
 		basePower: 120,
-		accuracy: 100,
-		gen: 9,
-		priority: 0,
-		pp: 1,
-		flags: {},
-		noPPBoosts: true,
-		secondary: null,
 		category: "Physical",
-		type: "Steel",
+		name: "Blue Shell",
+		gen: 9,
+		pp: 1,
+		noPPBoosts: true,
+		priority: 0,
+		flags: {},
+		secondary: null,
 		target: "normal",
+		type: "Steel",
 	},
 	// Prince Smurf
 	youfilthypeasant: {
@@ -1810,6 +1845,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		shortDesc: "Target becomes Normal-type/Gains Normalize; Torments target.",
 		desc: "Ignores Abilities; Makes the target Normal type and changes their ability to Normalize. Torments them. Cannot be used two turns in a row.",
 		name: "You Filthy Peasant",
+		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { protect: 1, mirror: 1, cantusetwice: 1 },
@@ -1847,20 +1883,19 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// Prince Smurf
 	dynamicshift: {
-		name: "Dynamic Shift",
+		accuracy: true,
+		basePower: 0,
 		category: "Status",
-		gen: 9,
-		isZ: "smurfscrown",
-		desc: "Sets a King’s Shield-like barrier for the rest of the turn: blocks Protect-blockable moves; lowers attacker Atk by 2 if Physical, SpA by 2 if Special. Permanently swaps Speed stats with the target (not boosts). Changes You Filthy Peasant to Last Resort.",
 		shortDesc: "Z. Shield + -2 Atk/SpA on block. Permanently swaps Spe. Filthy -> Last Resort.",
+		desc: "Sets a King’s Shield-like barrier for the rest of the turn: blocks Protect-blockable moves; lowers attacker Atk by 2 if Physical, SpA by 2 if Special. Permanently swaps Speed stats with the target (not boosts). Changes You Filthy Peasant to Last Resort.",
+		name: "Dynamic Shift",
+		gen: 9,
 		pp: 1,
 		priority: 4,
-		accuracy: true,
 		flags: { noassist: 1, failcopycat: 1 },
+		isZ: "smurfscrown",
 		stallingMove: true,
 		volatileStatus: 'dynamicshift',
-		type: "Normal",
-		target: "normal",
 		onPrepareHit(pokemon) {
 			this.add('-anim', pokemon, "King's Shield", pokemon);
 			return !!this.queue.willAct() && this.runEvent('StallMove', pokemon);
@@ -1937,18 +1972,21 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			},
 		},
 		secondary: null,
+		target: "normal",
+		type: "Normal",
 	},
 	// Quetzalcoatl
 	bigthunder: {
 		accuracy: true,
 		basePower: 50,
 		category: "Special",
+		shortDesc: "Hits opposing Pokemon at end of each turn. Duration varies.",
+		desc: "Hits all opposing Pokemon at the end of each turn. Number of turns is determined by the number of static counters the user has upon use.",
 		name: "Big Thunder",
+		gen: 9,
 		pp: 5,
 		priority: 0,
 		flags: { protect: 1, bypasssub: 1 },
-		shortDesc: "Hits opposing Pokemon at end of each turn. Duration varies.",
-		desc: "Hits all opposing Pokemon at the end of each turn. Number of turns is determined by the number of static counters the user has upon use.",
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1988,18 +2026,18 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// Roughskull
 	radiationstench: {
-		name: "Radiation Stench",
-		category: "Physical",
-		gen: 9,
-		desc: "Power doubles if the target is poisoned, and has a 20% chance to cause the target to flinch. Neutral effectiveness against Steel-type. Nullifies the target's ability upon hitting.",
-		shortDesc: "20%: Flinch. PSN: 2x power. Neutral vs Steel. Nullifies abilities.",
-		basePower: 100,
 		accuracy: 100,
+		basePower: 100,
+		category: "Physical",
+		shortDesc: "20%: Flinch. PSN: 2x power. Neutral vs Steel. Nullifies abilities.",
+		desc: "Power doubles if the target is poisoned, and has a 20% chance to cause the target to flinch. Neutral effectiveness against Steel-type. Nullifies the target's ability upon hitting.",
+		name: "Radiation Stench",
+		gen: 9,
 		pp: 10,
 		priority: 0,
+		flags: { protect: 1, mirror: 1 },
 		volatileStatus: 'gastroacid',
 		ignoreImmunity: {'Poison': true},
-		flags: { protect: 1, mirror: 1 },
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -2019,21 +2057,22 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			chance: 20,
 			volatileStatus: 'flinch',
 		},
-		type: "Poison",
 		target: "normal",
+		type: "Poison",
 	},
 	// Saint Deli
 	giftoffortune: {
-		name: "Gift of Fortune",
+		accuracy: 100,
 		basePower: 75,
 		category: "Special",
 		shortDesc: "High crit ratio. Random stat boost/volatile.",
 		desc: "High critical hit ratio. This Pokemon receives a random stat boost and positive volatile effect.",
-		accuracy: 100,
+		name: "Gift of Fortune",
 		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { protect: 1, mirror: 1 },
+		critRatio: 2,
 		onModifyPriority(priority, source) {
 			if (source.item === 'giftsack' && source.m?.sack?.length) return priority - 1;
 		},
@@ -2074,21 +2113,23 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				this.add('-message', `${source.name} emptied its Gift Sack!`);
 			}
 		},
-		critRatio: 2,
-		type: "Water",
+		secondary: null,
 		target: "normal",
+		type: "Water",
 	},
 	// Sakuya Izayoi
 	killingdoll: {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		desc: "User creates a substitute that disappears at the end of turn. Any damage it takes is dealt back to the foe.",
 		shortDesc: "Creates a 1-turn substitute that damages the foe.",
+		desc: "User creates a substitute that disappears at the end of turn. Any damage it takes is dealt back to the foe.",
 		name: "Killing Doll",
+		gen: 9,
 		pp: 5,
-		priority: 0,
+		priority: 4,
 		flags: { snatch: 1 },
+		volatileStatus: 'killingdoll',
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -2108,7 +2149,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				return this.NOT_FAIL;
 			}
 		},
-		volatileStatus: 'killingdoll',
 		condition: {
 			duration: 1,
 			onStart(pokemon) {
@@ -2179,9 +2219,10 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		desc: "Existing future moves are redirected towards foe and land immediately.",
 		shortDesc: "Redirects future moves to foe.",
+		desc: "Existing future moves are redirected towards foe and land immediately.",
 		name: "Misdirection",
+		gen: 9,
 		pp: 1,
 		priority: 0,
 		flags: {},
@@ -2220,8 +2261,8 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 80,
 		category: "Special",
-		desc: "Summons a random weather condition, uses either Wish, Assist, Baton Pass, Aqua Ring, Reflect, Light Screen, Assist, Recycle, Laser Focus or Safeguard. Changes type to match weather condition.",
 		shortDesc: "Summons random weather/status move. Typing matches weather.",
+		desc: "Summons a random weather condition, uses either Wish, Assist, Baton Pass, Aqua Ring, Reflect, Light Screen, Assist, Recycle, Laser Focus or Safeguard. Changes type to match weather condition.",
 		name: "Miracle",
 		gen: 9,
 		pp: 5,
@@ -2354,14 +2395,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
+		shortDesc: "Protection, no ability, 1.1x damage & speed per 10% HP lost.",
+		desc: "User is protected from attacks this turn. Reduces user's HP to 1 and disables user's ability. Gains a stack of Turbo Charge per 1/10 of user's max HP lost. Attack, Special Attack and Speed are 1.1x per stack. Stacks deplete by one per turn, and are reset if this Pokemon is switched.",
 		name: "Turbocharge",
+		gen: 9,
 		pp: 1,
 		noPPBoosts: true,
 		priority: 6,
 		flags: {},
-		secondary: null,
-		target: "self",
-		type: "Electric",
 		volatileStatus: 'turbocharge',
 		onTryMove() {
 			this.attrLastMove('[still]');
@@ -2431,21 +2472,22 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				pokemon.removeVolatile('turbocharge');
 			},
 		},
+		secondary: null,
+		target: "self",
+		type: "Electric",
 	},
 	// Shigeki
 	bloodfeast: {
-		name: "Bloodfeast",
-		category: "Physical",
-		gen: 9,
-		basePower: 80,
 		accuracy: 100,
+		basePower: 80,
+		category: "Physical",
+		shortDesc: "1.3x vs Bleeding. If used on Bleeding in consecutive turns, user enters Frenzy.",
+		desc: "Deals 1.3x damage to Bleeding targets. If the user hits a Bleeding target with Bloodfeast on consecutive turns, the user enters Frenzy. While under Illusion, this move has +1 priority and a high crit rate.",
+		name: "Bloodfeast",
+		gen: 9,
 		pp: 10,
 		priority: 0,
 		flags: { contact: 1, protect: 1, mirror: 1, bite: 1 },
-		type: "Dark",
-		target: "normal",
-		shortDesc: "1.3x vs Bleeding. If used on Bleeding in consecutive turns, user enters Frenzy.",
-		desc: "Deals 1.3x damage to Bleeding targets. If the user hits a Bleeding target with Bloodfeast on consecutive turns, the user enters Frenzy. While under Illusion, this move has +1 priority and a high crit rate.",
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -2483,17 +2525,13 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				(source as any).ssbBloodfeastBleedTurn = undefined;
 			}
 		},
+		secondary: null,
+		target: "normal",
+		type: "Dark",
 	},
 	// Shigeki
 	glare: {
-		num: 137,
-		accuracy: 100,
-		basePower: 0,
-		category: "Status",
-		name: "Glare",
-		pp: 30,
-		priority: 0,
-		flags: { protect: 1, reflectable: 1, mirror: 1, metronome: 1 },
+		inherit: true,
 		shortDesc: "Paralyzes. If user has Hemolust and target is already paralyzed, Brainwash it instead.",
 		desc: "Paralyzes the target. If the user has Hemolust and the target is already paralyzed, this instead inflicts Brainwashed (Psychic-types are immune).",
 		onTryHit(target, source, move) {
@@ -2517,16 +2555,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			if (source.hasAbility('hemolust') && target.status === 'par') return;
 			target.trySetStatus('par', source, move);
 		},
-		type: "Normal",
-		target: "normal",
 	},
 	// Suika Ibuki
 	demi: {
 		accuracy: 100,
 		basePower: 75,
 		category: "Physical",
-		desc: "Infiltrates and forces foe to use Substitue.",
 		shortDesc: "Infiltrates and substitutes foe.",
+		desc: "Infiltrates and forces foe to use Substitue.",
 		name: "Demi",
 		gen: 9,
 		pp: 5,
@@ -2550,17 +2586,16 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	// Tao
 	taiji: {
-		name: "Taiji",
-		shortDesc: "User focuses, then hits last at varying power.",
-		desc: "User focuses, then moves last. If the user is not damaged by an attacking move while focusing, this move always results in a critical hit and forces the target to recharge; Otherwise, it hits at halved power.",
+		accuracy: true,
 		basePower: 80,
 		category: "Physical",
-		accuracy: true,
+		shortDesc: "User focuses, then hits last at varying power.",
+		desc: "User focuses, then moves last. If the user is not damaged by an attacking move while focusing, this move always results in a critical hit and forces the target to recharge; Otherwise, it hits at halved power.",
+		name: "Taiji",
 		gen: 9,
-		priority: -8,
-		flags: { contact: 1, protect: 1, punch: 1, failmefirst: 1, nosleeptalk: 1, noassist: 1, failcopycat: 1, failinstruct: 1, metronome: 1 },
 		pp: 5,
-		breaksProtect: true,
+		priority: -8,
+		flags: { contact: 1, punch: 1, failmefirst: 1, nosleeptalk: 1, noassist: 1, failcopycat: 1, failinstruct: 1, metronome: 1 },
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -2597,21 +2632,21 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			},
 		},
 		secondary: null,
-		type: "Fighting",
 		target: "normal",
+		type: "Fighting",
 	},
 	// Tao
 	wuji: {
-		name: "Wuji",
-		desc: "User focuses, then hits last, causing the target to recharge. Fails if the user is not attacked while charging.",
-		shortDesc: "User focuses, then hits last if damaged first.",
+		accuracy: true,
 		basePower: 80,
 		category: "Physical",
-		accuracy: true,
+		shortDesc: "User focuses, then hits last if damaged first.",
+		desc: "User focuses, then hits last, causing the target to recharge. Fails if the user is not attacked while charging.",
+		name: "Wuji",
 		gen: 9,
+		pp: 5,
 		priority: -8,
 		flags: { contact: 1, protect: 1, failmefirst: 1, nosleeptalk: 1, noassist: 1, failcopycat: 1, failinstruct: 1, metronome: 1 },
-		pp: 5,
 		willCrit: true,
 		onTryMove() {
 			this.attrLastMove('[still]');
@@ -2648,20 +2683,20 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			},
 		},
 		secondary: null,
-		type: "Fighting",
 		target: "normal",
+		type: "Fighting",
 	},
 	// Tao
 	ziran: {
-		name: "Ziran",
+		accuracy: true,
 		basePower: 80,
 		category: "Physical",
 		shortDesc: "Move data used for Shangqing.",
-		accuracy: true,
+		name: "Ziran",
 		gen: 9,
+		pp: 10,
 		priority: 0,
 		flags: { contact: 1, protect: 1, failmefirst: 1, nosleeptalk: 1, noassist: 1, failinstruct: 1 },
-		pp: 10,
 		willCrit: true,
 		onTryMove() {
 			this.attrLastMove('[still]');
@@ -2670,23 +2705,21 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-anim', source, 'Focus Punch', target);
 		},
 		secondary: null,
-		type: "Fighting",
 		target: "normal",
+		type: "Fighting",
 	},
 	// Toshiro
 	sennenhyoro: {
-		name: "Sennen Hyoro",
-		gen: 9,
 		accuracy: 100,
 		basePower: 90,
 		category: "Physical",
-		type: "Ice",
+		shortDesc: "Charge 1 turn. 7T freeze ignoring immunity. 1/use per switch-in.",
+		desc: "Charges for 1 turn, then strikes. Freezes the target for 7 turns (ignores freeze immunity). Can only be used once per switch-in.",
+		name: "Sennen Hyoro",
+		gen: 9,
 		pp: 5,
 		priority: 0,
 		flags: { charge: 1, protect: 1, mirror: 1 },
-		desc: "Charges for 1 turn, then strikes. Freezes the target for 7 turns (ignores freeze immunity). Can only be used once per switch-in.",
-		shortDesc: "Charge 1 turn. 7T freeze ignoring immunity. 1/use per switch-in.",
-		target: "normal",
 		onTryMove(attacker, defender, move) {
 			if (attacker.removeVolatile('sennenhyorocharge')) {
 				return;
@@ -2714,19 +2747,24 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			(target.statusState as any).ssbTurns = 7;
 			this.add('-message', `${target.name} was sealed in ice!`);
 		},
+		secondary: null,
+		target: "normal",
+		type: "Ice",
 	},
 	// Trey
 	burstdelta: {
 		accuracy: true,
 		basePower: 50,
 		category: "Physical",
-		desc: "User heals equal to 1/3 of damage dealt and lowers target's Defense by 1 stage but this move cannot be used twice in a row.",
 		shortDesc: "Heal 1/3 damage and lower Defense by 1 stage but can't use twice in a row.",
+		desc: "User heals equal to 1/3 of damage dealt and lowers target's Defense by 1 stage but this move cannot be used twice in a row.",
 		name: "Burst Delta",
 		gen: 9,
 		pp: 5,
 		priority: 1,
 		flags: { protect: 1, mirror: 1, heal: 1, cantusetwice: 1 },
+		drain: [1, 3],
+		critRatio: 2,
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -2739,8 +2777,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 				this.damage(damage, target, source, effect);
 			}
 		},
-		drain: [1, 3],
-		critRatio: 2,
 		secondary: {
 			chance: 100,
 			boosts: {
@@ -2757,13 +2793,15 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 120,
 		category: "Physical",
-		desc: "Charges, then hits turn 2. If the user is targeted by an attacking move while charging, Grand Delta's base power is halved; If not attacked, always results in a critical hit. User recoves 100% of the damage dealt.",
 		shortDesc: "Charges, then hits turn 2. Halved power if hit during charge; Guaranteed crit if not.",
+		desc: "Charges, then hits turn 2. If the user is targeted by an attacking move while charging, Grand Delta's base power is halved; If not attacked, always results in a critical hit. User recoves 100% of the damage dealt.",
 		name: "Grand Delta",
 		gen: 9,
 		pp: 1,
 		priority: 6,
+		flags: { charge: 1 },
 		isZ: "yoichisbow",
+		drain: [1, 1],
 		onTryMove(attacker, defender, move) {
 			if (attacker.removeVolatile(move.id)) {
 				return;
@@ -2789,8 +2827,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			source.removeVolatile('deltacharge');
 			target.side.addSideCondition('deltadrop');
 		},
-		drain: [1, 1],
-		flags: { charge: 1 },
+		secondary: null,
 		target: "normal",
 		type: "Flying",
 	},
@@ -2799,14 +2836,13 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 50,
 		category: "Physical",
-		desc: "Hits the next turn after being used.",
 		shortDesc: "Hits next turn.",
 		name: "Dynamite Arrow",
 		gen: 9,
 		pp: 40,
 		priority: 0,
-		sideCondition: 'dynamitearrow',
 		flags: { allyanim: 1, futuremove: 1 },
+		sideCondition: 'dynamitearrow',
 		condition: {
 			duration: 2,
 			onSideStart(targetSide) {
@@ -2850,8 +2886,8 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 80,
 		basePower: 100,
 		category: "Special",
-		desc: "Hits the opposing Pokemon and one random inactive Pokemon on the opposing side.",
 		shortDesc: "Hits a random inactive opposing Pokemon.",
+		desc: "Hits the opposing Pokemon and one random inactive Pokemon on the opposing side.",
 		name: "Terrorize the Peaks",
 		gen: 9,
 		pp: 5,
@@ -2901,15 +2937,15 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 100,
 		basePower: 0,
 		category: "Physical",
-		desc: "Steals 1/10-to-1/3 max HP from all allies with at least 1/3 max HP remaining. This Pokemon recovers HP equal to the stolen HP. This move's power is equal to (HP Stolen / 1.5). 30% chance to burn each Pokemon hit, replacing existing status conditions.",
 		shortDesc: "All foes: 30% burn. Steals allies' HP to determine power.",
+		desc: "Steals 1/10-to-1/3 max HP from all allies with at least 1/3 max HP remaining. This Pokemon recovers HP equal to the stolen HP. This move's power is equal to (HP Stolen / 1.5). 30% chance to burn each Pokemon hit, replacing existing status conditions.",
 		name: "Blasphemous Act",
 		gen: 9,
 		pp: 1,
 		priority: 0,
 		flags: { contact: 1 },
-		breaksProtect: true,
 		isZ: "braidoffire",
+		breaksProtect: true,
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -2948,6 +2984,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		shortDdesc: "Damages foe every turn until switch/faint.",
 		desc: "Damages the foe using Defense stat in calculation at the end of every turn until that Pokemon faints or another Pokemon is affected by this move.",
 		name: "Shikigami Ran",
+		gen: 9,
 		pp: 40,
 		priority: 0,
 		flags: { bypasssub: 1 },
@@ -2993,10 +3030,12 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		basePower: 40,
 		category: "Special",
 		name: "Ran Yakumo",
+		gen: 9,
 		pp: 40,
 		priority: 0,
 		flags: {},
 		overrideDefensiveStat: 'def',
+		secondary: null,
 		target: "normal",
 		type: "???",
 	},
@@ -3005,14 +3044,14 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: 90,
 		basePower: 10,
 		category: "Physical",
+		shortDesc: "Power doubles with each hit; 10% chance to confuse.",
+		desc: "For type effectiveness, second hit combines Rock-type, third hit combines Steel-type, and fourth hit combines Fire-type.",
 		name: "Super-Knuckle Shuffle",
+		gen: 9,
 		pp: 15,
 		priority: 0,
 		flags: { contact: 1, protect: 1, mirror: 1 },
-		secondary: null,
 		multihit: [3, 4],
-		target: "normal",
-		type: "Normal",
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -3066,6 +3105,9 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			}
 			if (typing && typing !== 'Normal') return typeMod + this.dex.getEffectiveness(typing, type);
 		},
+		secondary: null,
+		target: "normal",
+		type: "Normal",
 	},
 	// The Stuff
 	pinkrocks: {
