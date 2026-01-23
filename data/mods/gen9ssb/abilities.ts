@@ -1450,13 +1450,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	theworld: {
 		name: "The World",
 		gen: 9,
-		onSwitchIn(pokemon) {
-			if (!this.field.pseudoWeather['trickroom']) {
-				this.field.addPseudoWeather('trickroom');
-			} else {
-				this.field.removePseudoWeather('trickroom');
-			}
-		},
 		onFoeTryMove(target, source, move) {
 			if (move.category === 'Status' || move.flags['futuremove']) return;
 			if (!source.side.addSlotCondition(source, 'futuremove')) return;
@@ -1625,13 +1618,14 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	},
 	// Suika Ibuki
 	densitymanipulation: {
-		desc: "This Pokemon sets a Substitute and loses 33% of their max HP upon switching in.",
-		shortDesc: "Switch-in: -33% HP, sets Substitute.",
+		desc: "This Pokemon sets a 1 HP substitute that lasts for one turn and loses 1/3 of its max HP upon switching in.",
+		shortDesc: "1-turn sub on switch-in.",
 		onSwitchIn(pokemon) {
 			if (pokemon.hp > pokemon.maxhp / 3) {
 				this.add('-activate', pokemon, 'Density Manipulation');
 				pokemon.addVolatile('substitute');
 				pokemon.volatiles['substitute'].hp = 1;
+				pokemon.volatiles['substitute'].duration = 1;
 				this.directDamage(pokemon.maxhp / 3, pokemon);
 			}
 		},
