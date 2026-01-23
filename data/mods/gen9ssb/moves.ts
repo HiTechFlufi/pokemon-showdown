@@ -787,7 +787,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	},
 	healingwish: {
 		inherit: true,
-		slotCondition: 'healingwish',
 		condition: {
 			onSwitchIn(pokemon) {
 				if (!pokemon.fainted) {
@@ -984,40 +983,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		type: "Steel",
 	},
 	// Luminous
-	polaris: {
-		accuracy: true,
-		basePower: 170,
-		category: "Special",
-		shortDesc: "Light-type UN, LoR & RM; burns target.",
-		desc: "The user turns into Ultra Necrozma and becomes Light-type. Light of Ruin and Rainbow Maxifier become Light-type. Burns the target.",
-		name: "Polaris",
-		gen: 9,
-		pp: 1,
-		priority: 0,
-		flags: { protect: 1, bypasssub: 1 },
-		isZ: "spectralprism",
-		status: 'brn',
-		onTryMove() {
-			this.attrLastMove('[still]');
-		},
-		onPrepareHit(target, source) {
-			this.add('-anim', source, 'Light That Burns the Sky', target);
-			this.add('-anim', source, 'Flash', target);
-		},
-		onAfterMove(pokemon, target, move) {
-			if (pokemon.species.id === 'necrozma') changeSet(this, pokemon, ssbSets['Luminous-N'], true);
-			pokemon.setAbility('blindinglight');
-			this.add('-anim', pokemon, 'Flash', pokemon);
-			for (const targetPokemon of this.getAllActive()) {
-				if (pokemon === targetPokemon) continue;
-				targetPokemon.addVolatile('blindinglight');
-			}
-		},
-		secondary: null,
-		target: "normal",
-		type: "Light",
-	},
-	// Luminous
 	rainbowmaxifier: {
 		accuracy: 85,
 		basePower: 80,
@@ -1064,6 +1029,40 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		],
 		target: "normal",
 		type: "Water",
+	},
+	// Luminous
+	polaris: {
+		accuracy: true,
+		basePower: 170,
+		category: "Special",
+		shortDesc: "Light-type UN, LoR & RM; burns target.",
+		desc: "The user turns into Ultra Necrozma and becomes Light-type. Light of Ruin and Rainbow Maxifier become Light-type. Burns the target.",
+		name: "Polaris",
+		gen: 9,
+		pp: 1,
+		priority: 0,
+		flags: { protect: 1, bypasssub: 1 },
+		isZ: "spectralprism",
+		status: 'brn',
+		onTryMove() {
+			this.attrLastMove('[still]');
+		},
+		onPrepareHit(target, source) {
+			this.add('-anim', source, 'Light That Burns the Sky', target);
+			this.add('-anim', source, 'Flash', target);
+		},
+		onAfterMove(pokemon, target, move) {
+			if (pokemon.species.id === 'necrozma') changeSet(this, pokemon, ssbSets['Luminous-N'], true);
+			pokemon.setAbility('blindinglight');
+			this.add('-anim', pokemon, 'Flash', pokemon);
+			for (const targetPokemon of this.getAllActive()) {
+				if (pokemon === targetPokemon) continue;
+				targetPokemon.addVolatile('blindinglight');
+			}
+		},
+		secondary: null,
+		target: "normal",
+		type: "Light",
 	},
 	// Marisa Kirisame
 	masterspark: {
@@ -1291,6 +1290,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		priority: 0,
 		flags: {},
 		isZ: 'hadeansoil',
+		volatileStatus: 'planetbefall',
 		onTryMove() {
 			this.attrLastMove('[still]');
 		},
@@ -1298,7 +1298,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 			this.add('-anim', source, 'Draco Meteor', target);
 			this.add('-anim', source, 'Continental Crush', target);
 		},
-		volatileStatus: 'planetbefall',
 		onHit(target, source, move) {
 			const sourceSide = source.side;
 			sourceSide.addSideCondition('jadeshield');
@@ -2757,8 +2756,8 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 50,
 		category: "Physical",
-		desc: "User heals equal to 1/3 of damage dealt and lowers target's Defense by 1 stage but this move cannot be used twice in a row.",
 		shortDesc: "Heal 1/3 damage and lower Defense by 1 stage but can't use twice in a row.",
+		desc: "User heals equal to 1/3 of damage dealt and lowers target's Defense by 1 stage but this move cannot be used twice in a row.",
 		name: "Burst Delta",
 		gen: 9,
 		pp: 5,
@@ -2794,8 +2793,8 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 120,
 		category: "Physical",
-		desc: "Charges, then hits turn 2. If the user is targeted by an attacking move while charging, Grand Delta's base power is halved; If not attacked, always results in a critical hit. User recoves 100% of the damage dealt.",
 		shortDesc: "Charges, then hits turn 2. Halved power if hit during charge; Guaranteed crit if not.",
+		desc: "Charges, then hits turn 2. If the user is targeted by an attacking move while charging, Grand Delta's base power is halved; If not attacked, always results in a critical hit. User recoves 100% of the damage dealt.",
 		name: "Grand Delta",
 		gen: 9,
 		pp: 1,
@@ -2837,7 +2836,6 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		accuracy: true,
 		basePower: 50,
 		category: "Physical",
-		desc: "Hits the next turn after being used.",
 		shortDesc: "Hits next turn.",
 		name: "Dynamite Arrow",
 		gen: 9,
