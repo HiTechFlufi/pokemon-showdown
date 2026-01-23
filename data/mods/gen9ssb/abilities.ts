@@ -970,7 +970,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 		desc: "This Pokemon is immune to status, and changes its typing to match the typing of the move it's using. On switch-in, user obtains either Assault Vest, Choice Specs, Expert Belt, Flame Orb, Light Ball, Razor Fang, or Toxic Orb. On switch-out, uses Fling.",
 		shortDesc: "Immune to status; Protean; Random item/fling on switch-in/out.",
 		onStart(pokemon) {
-			let i = this.random(6);
+			let i = this.random(5);
 			if (i === 0) {
 				pokemon.setItem('choicespecs');
 				this.add('-message', `${pokemon.name} obtained Choice Specs!`);
@@ -983,9 +983,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			} else if (i === 3) {
 				pokemon.setItem('lightball');
 				this.add('-message', `${pokemon.name} obtained Light Ball!`);
-			} else if (i === 4) {
-				pokemon.setItem('razorfang');
-				this.add('-message', `${pokemon.name} obtained Razor Fang!`);
 			} else {
 				pokemon.setItem('toxicorb');
 				this.add('-message', `${pokemon.name} obtained Toxic Orb!`);
