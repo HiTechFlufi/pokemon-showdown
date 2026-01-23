@@ -521,7 +521,7 @@ export const ssbSets: SSBSets = {
 		moves: [
 			'Revival Blessing',
 			'Sparkly Swirl',
-			'Oblivion Wing'
+			'Aeroblast'
 		],
 		signatureMove: 'Miracle',
 		evs: { hp: 252, def: 4, spa: 252 },
