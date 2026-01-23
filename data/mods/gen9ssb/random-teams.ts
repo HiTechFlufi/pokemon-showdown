@@ -503,14 +503,14 @@ export const ssbSets: SSBSets = {
 		item: 'Stopwatch',
 		gender: 'F',
 		moves: [
-			'Dazzling Gleam',
+			'Teleport',
 			'Doom Desire',
 			'Fleur Cannon'
 		],
 		signatureMove: 'Killing Doll',
 		evs: { hp: 252, def: 4, spa: 252 },
-		ivs: { atk: 0, spe: 0 },
-		nature: 'Quiet',
+		ivs: { atk: 0 },
+		nature: 'Modest',
 	},
 
 	'Sanae Kochiya': {
