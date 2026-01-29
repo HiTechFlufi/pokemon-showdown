@@ -20,7 +20,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 		name: "Woven Together, Cohere Forever",
 		gen: 9,
 		desc: "When using Blissful Breeze, this Pokémon absorbs the typing of the last move used by itself or its allies, dealing an additional instance of 80 BP damage based on the typing absorbed and applying Silken Drafts to the opposing side. The additional instance of damage lasts for three turns and only one may exist at a time. Using Blissful Breeze while this effect is active will refresh its duration. Silken Drafts increases the damage taken from moves of the absorbed typing by 40%. This effect lasts for five turns.",
-		shortDesc: "See '/ssb Aeri' for more!",
+		shortDesc: "Blissful Breeze: Hits for 3 turns with imprint type.",
 		onBeforeMovePriority: 9,
 		onBeforeMove(pokemon) {
 			if (!pokemon.side.lastMoveUsed) return;
@@ -414,7 +414,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	vindication: {
 		name: "Vindication",
 		gen: 9,
-		shortDesc: "Prankster. When hit: disable, -4 PP, vindictive, reduce damage once. When defeated: disable all, lock.",
+		shortDesc: "Prankster; Hurt: disable/spite/vindictive/less damage. KOd: disable all/lock.",
 		desc: "Status moves have +2 priority. When hit by a damaging move, disables that move, drain 4 additional PP and inflict vindictive. Reduce damage received by 75% once per switch-in. Disables all opponents moves and locks them in for 1 turn when defeated.",
 		onStart() {
 			this.effectState.damaged = false;
@@ -457,7 +457,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	repentance: {
 		name: "Repentance",
 		gen: 9,
-		shortDesc: "Prankster. When hit: disable and -4 PP. Trap, +2 priority, ignore accuracy and 1.5x damage vs vindictive mons. Enemy loses vindictive when hit.",
+		shortDesc: "Prankster. Hit: disable/spite. Trap/priority/ignore accuracy/1.5x damage vs vindictive.",
 		desc: "Status moves have +2 priority. When hit by an attack, disables that move and drains 4 additional PP. When faced with an opponent inflicted with 'Vindictive': traps that opponent, all moves gain +2 priority, bypasses accuracy checks. When damaging an opponent with 'Vindictive', deals 1.5x extra damage and removes 'Vindictive'.",
 		onDamagingHit(damage, target, source, move) {
 			if (move.isZ && move.basemove) move = this.dex.moves.get(move.baseMove);
@@ -1823,8 +1823,8 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 	},
 	// Trey
 	concentration: {
-		desc: "Starts Dynamite Arrow on the opposing side upon switching in. This Pokemon has x1.3 speed. This Pokemon's attacks cannot miss. This Pokemon's attacks have 1.5x power and +2 crit ratio after one full turn of not being attacked.",
-		shortDesc: "See '/ssb Trey' for more!",
+		desc: "Starts Dynamite Arrow on the opposing side upon switching in. This Pokemon has 1.3x speed. This Pokemon's attacks cannot miss. This Pokemon's attacks have 1.5x power and +2 crit ratio after one full turn of not being attacked.",
+		shortDesc: "Dynamite Arrow/1.3x SPE/concentration/can't miss.",
 		onStart(pokemon) {
 			const target = pokemon.side.foe.active[pokemon.side.foe.active.length - 1 - pokemon.position];
 			target.side.addSideCondition('dynamitearrow');
@@ -2117,144 +2117,6 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 				this.add('-message', `${pokemon.name} couldn't eat because of the Sickening Stench!`);
 				return null;
 			},
-		},
-	},
-	// Cinque
-	cheerleader: {
-		name: "Cheerleader",
-		gen: 9,
-		flags: {},
-		shortDesc: "-Flinch/Par/Frz/Slp/Cnf; Multiscale; +1 crit if attacked.",
-		desc: "Prevents Flinching, Paralysis, Freeze, Sleep, and Confusion. Whenever this Pokemon is damaged by an attacking move, its crit ratio is raised by 1.",
-		onStart() {
-			this.effectState.attacksTaken = 0;
-		},
-		onModifyAtk(atk, pokemon) {
-			if (!pokemon.m.homerun) return;
-			return this.chainModify(1.5);
-		},
-		onModifyDef(def, pokemon) {
-			if (!pokemon.m.homerun) return;
-			return this.chainModify(1.5);
-		},
-		onModifySpD(spd, pokemon) {
-			if (!pokemon.m.homerun) return;
-			return this.chainModify(1.5);
-		},
-		onModifySTAB(stab, source, target, move) {
-			if (!source.m.homerun) return;
-			if (move.forceSTAB || source.hasType(move.type)) {
-				if (stab === 2) {
-					return 2.25;
-				}
-				return 2;
-			}
-		},
-		onSourceModifyDamage(damage, source, target, move) {
-			if (target.hp >= target.maxhp) {
-				this.debug('Cheerleader weaken');
-				return this.chainModify(0.5);
-			}
-		},
-		onTryAddVolatile(status, pokemon) {
-			if (['flinch', 'confusion', 'yawn'].includes(status.id)) {
-				this.add('-immune', pokemon, '[from] ability: Cheerleader');
-				return null;
-			}
-		},
-		onUpdate(pokemon) {
-			if (['slp', 'frz', 'par'].includes(pokemon.status)) {
-				this.add('-activate', pokemon, 'ability: Cheerleader');
-				pokemon.cureStatus();
-			}
-			if (pokemon.volatiles['confusion']) {
-				this.add('-activate', pokemon, 'ability: Cheerleader');
-				pokemon.removeVolatile('confusion');
-			}
-		},
-		onSetStatus(status, target, source, effect) {
-			if (['slp', 'par', 'frz'].includes(status.id)) {
-				this.add('-immune', target, '[from] ability: Cheerleader');
-				return false;
-			}
-		},
-		onDamagingHit(damage, target, source, move) {
-			if (move && damage && target !== source) this.effectState.attacksTaken++;
-		},
-		onModifyCritRatio(critRatio, pokemon) {
-			if (!this.effectState.attacksTaken) return;
-			return critRatio + this.effectState.attacksTaken;
-		},
-	},
-	// Rooci Caxa
-	horrorsoftheforest: {
-		name: "Horrors of the Forest",
-		gen: 9,
-		shortDesc: "Harvest (100% in Grassy Terrain) + Flash Fire.",
-		desc: "At the end of each turn, if this Pokemon has no held item, and its last held item was a berry, 50% chance to recover previous held item. 100% chance in Grassy Terrain. This Pokemon's Fire-type attacks do x1.5 damage after being hit by a Fire move; Fire immunity.",
-		flags: {},
-		onStart(pokemon) {
-			this.field.setTerrain('grassyterrain');
-		},
-		onResidualOrder: 28,
-		onResidualSubOrder: 2,
-		onResidual(pokemon) {
-			if (this.field.isTerrain('grassyterrain') || this.randomChance(1, 2)) {
-				if (pokemon.hp && !pokemon.item && this.dex.items.get(pokemon.lastItem).isBerry) {
-					pokemon.setItem(pokemon.lastItem);
-					pokemon.lastItem = '';
-					this.add('-item', pokemon, pokemon.getItem(), '[from] ability: Horrors of the Forest');
-				}
-			}
-		},
-		onTryHit(target, source, move) {
-			if (target !== source && move.type === 'Fire') {
-				move.accuracy = true;
-				if (!target.addVolatile('horrorsoftheforest')) {
-					this.add('-immune', target, '[from] ability: Horrors of the Forest');
-				}
-				if (target.addType('Fire')) {
-					this.add('-start', target, 'typeadd', 'Fire', '[from] ability: Horrors of the Forest');
-				}
-				return null;
-			}
-		},
-		onEnd(pokemon) {
-			pokemon.removeVolatile('horrorsoftheforest');
-		},
-		condition: {
-			noCopy: true,
-			onStart(target) {
-				this.add('-start', target, 'ability: Horrors of the Forest');
-			},
-			onModifyAtkPriority: 5,
-			onModifyAtk(atk, attacker, defender, move) {
-				if (move.type === 'Fire') {
-					this.debug('HOTF fire boost');
-					return this.chainModify(1.5);
-				}
-			},
-			onModifySpAPriority: 5,
-			onModifySpA(atk, attacker, defender, move) {
-				if (move.type === 'Fire') {
-					this.debug('HOTF fire boost');
-					return this.chainModify(1.5);
-				}
-			},
-			onEnd(target) {
-				this.add('-end', target, 'ability: Horrors of the Forest', '[silent]');
-			},
-		},
-	},
-	// Kusanali
-	onallthingsmeditated: {
-		name: "On All Things Meditated",
-		gen: 9,
-		shortDesc: "On switch-in, this Pokemon summons Court of Dreams.",
-		flags: {},
-		onStart(pokemon) {
-			this.add('-activate', pokemon, '[from] ability: On All Things Meditated');
-			pokemon.side.addSideCondition('courtofdreams');
 		},
 	},
 	// Genus
